@@ -27,7 +27,7 @@ int main(void)
 
 
   /* Configure the system clock */
-  SystemClock_Config();
+  initializeClock();
 
   /* Initialize all configured peripherals */
 

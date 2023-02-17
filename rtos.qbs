@@ -40,7 +40,7 @@ CppApplication
     property string Dma:         Home + "/Middlewares/Dma"
     property string Gpio:        Home + "/Middlewares/Gpio"
     property string Spi:         Home + "/Middlewares/Spi"
-    property string Third_Party: Home + "/Middlewares/Third_Party"
+    property string Third_Party: Home + "/Middlewares/Third_Party/FreeRTOS/Src"
     property string Timer:       Home + "/Middlewares/Timer"
     property string Usart:       Home + "/Middlewares/Usart"
 
@@ -170,7 +170,12 @@ CppApplication
         files:
         [
             Third_Party + "/Inc/*.h",
-            Third_Party + "/Src/*.c",
+            Third_Party + "/CMSIS_RTOS_V2/*.h",
+            Third_Party + "/CMSIS_RTOS_V2/*.c",
+            Third_Party + "/portable/GCC/ARM_CM7/r0p1/*.c",
+            Third_Party + "/portable/GCC/ARM_CM7/r0p1/*.h",
+            Third_Party + "/portable/MemMang/*.c",
+            Third_Party + "/*.c",
         ]
     }
 
@@ -221,6 +226,8 @@ CppApplication
         Gpio        + "/Inc",
         Spi         + "/Inc",
         Third_Party + "/Inc",
+        Third_Party + "/CMSIS_RTOS_V2",
+        Third_Party + "/portable/GCC/ARM_CM7/r0p1/",
         Timer       + "/Inc",
         Usart       + "/Inc",
     ]
