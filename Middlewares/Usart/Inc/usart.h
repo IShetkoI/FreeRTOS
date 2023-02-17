@@ -10,9 +10,11 @@
 #ifndef USART_H
 #define USART_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* Define to prevent recursive inclusion --------------------------------------*/
-#include "../../../Core/Inc/main.h"
+#include "main.h"
 
 
 /**
@@ -22,9 +24,6 @@
    ******************************************************************************
    * @{
    */
-
-#define BAUD_RATE 115200 ///< Information transfer rate
-#define UART_SIZE 1      ///< Package size
 
 
 /**
@@ -37,9 +36,12 @@
 HAL_StatusTypeDef initializeUsart (void);
 
 
-UART_HandleTypeDef getUSART(void);
 /**
   * @}
   */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* USART_H: */

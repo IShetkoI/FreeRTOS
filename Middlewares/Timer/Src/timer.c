@@ -1,65 +1,115 @@
+/**
+  ******************************************************************************
+  * @file    timer.c
+  * @brief   This file provides code for the configuration
+  *          of the TIM instances.
+  ******************************************************************************
+  */
 
 #include "timer.h"
 
+#define INITIAL_PERIOD_VALUE    215 ///< Initial value of the timer period
+#define INITIAL_PRESCALER_VALUE 0   ///< Initial value of the timer prescaler
+
+static TIM_HandleTypeDef timer;     ///< Pointer Timer Handler
+
 static uint16_t interpolation (uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y1, uint16_t y3);
 
-TIM_HandleTypeDef timer;
 
-/* TIM6 init function */
-void MX_TIM6_Init(void)
+/**
+   ******************************************************************************
+   * @brief    Timer initialization function
+   * @ingroup  timer
+   ******************************************************************************
+   */
+
+void initializeTimer6 (void)
 {
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
 
+    timer.Instance               = TIM6;
+    timer.Init.Prescaler         = INITIAL_PRESCALER_VALUE;
+    timer.Init.CounterMode       = TIM_COUNTERMODE_UP;
+    timer.Init.Period            = INITIAL_PERIOD_VALUE;
+    timer.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    ASSERT (HAL_TIM_Base_Init (&timer) != HAL_OK);
 
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  timer.Instance = TIM6;
-  timer.Init.Prescaler = 0;
-  timer.Init.CounterMode = TIM_COUNTERMODE_UP;
-  timer.Init.Period = 215;
-  timer.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&timer) != HAL_OK)
-  {
-    errorHandler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&timer, &sMasterConfig) != HAL_OK)
-  {
-    errorHandler();
-  }
-
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+    sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
+    ASSERT (HAL_TIMEx_MasterConfigSynchronization (&timer, &sMasterConfig) != HAL_OK);
 }
 
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
+
+/**
+   ******************************************************************************
+   * @brief      This function configures the hardware resources used in this
+   *             example
+   * @ingroup    timer
+   * @param[in]  tim_baseHandle - Timer handle pointer
+   ******************************************************************************
+   */
+
+void HAL_TIM_Base_MspInit (TIM_HandleTypeDef *tim_baseHandle)
 {
+    if (tim_baseHandle->Instance == TIM6)
+    {
+        /* TIM6 clock enable */
+        __HAL_RCC_TIM6_CLK_ENABLE ();
 
-  if(tim_baseHandle->Instance==TIM6)
-  {
-    /* TIM6 clock enable */
-    __HAL_RCC_TIM6_CLK_ENABLE();
-
-    /* TIM6 interrupt Init */
-    HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
-  }
+        /* TIM6 interrupt Init */
+        HAL_NVIC_SetPriority (TIM6_DAC_IRQn, 5, 0);
+        HAL_NVIC_EnableIRQ (TIM6_DAC_IRQn);
+    }
 }
 
-void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
+
+/**
+   ******************************************************************************
+   * @brief      This function freeze the hardware resources used in this example
+   * @ingroup    timer
+   * @param[in]  tim_baseHandle - Timer handle pointer
+   ******************************************************************************
+   */
+
+void HAL_TIM_Base_MspDeInit (TIM_HandleTypeDef *tim_baseHandle)
 {
-
-  if(tim_baseHandle->Instance==TIM6)
-  {
-
-    __HAL_RCC_TIM6_CLK_DISABLE();
-
-  }
+    if (tim_baseHandle->Instance == TIM6)
+    {
+        __HAL_RCC_TIM6_CLK_DISABLE ();
+    }
 }
+
+
+/**
+   ******************************************************************************
+   * @brief      Interpolation calculation function
+   * @ingroup    adc
+   * @param[in]  x1 - Contiguous value for y1
+   * @param[in]  x2 - Contiguous value for y2
+   * @param[in]  x3 - Contiguous value for y3
+   * @param[in]  y1 - First value of the range
+   * @param[in]  y3 - Second value of the range
+   * @return     Intermediate value between y1 and y2
+   *
+   *  \f[
+   *  y_2 = y_1 + (x_2 - x_1) * (y_3 - y_1) / (x_3 - x_1);
+   *  \f]
+   ******************************************************************************
+   */
 
 static uint16_t interpolation (uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y1, uint16_t y3)
 {
     uint16_t result = y1 + (x2 - x1) * (y3 - y1) / (x3 - x1);
     return result;
 }
+
+
+/**
+   ******************************************************************************
+   * @brief      Function for setting a new timer configuration
+   * @ingroup    adc
+   ******************************************************************************
+   */
 
 void setTimerConfig (uint16_t adcValue)
 {
@@ -96,34 +146,52 @@ void setTimerConfig (uint16_t adcValue)
     }
 
     /* Applying the counted period and the prescaler to the timer */
-
     __HAL_TIM_SET_AUTORELOAD (&timer, period);
     __HAL_TIM_SET_PRESCALER (&timer, prescaler);
 }
 
-void startTimerBase(void)
+
+/**
+   ******************************************************************************
+   * @brief      Timer start function
+   * @ingroup    timer
+   ******************************************************************************
+   */
+
+void startTimerBase (void)
 {
-	HAL_TIM_Base_Start (&timer);
+    HAL_TIM_Base_Start (&timer);
 }
 
-TIM_HandleTypeDef getTimer(void)
+
+/**
+   ******************************************************************************
+   * @brief      Function for passing a pointer to a timer
+   * @ingroup    timer
+   * @return     Pointer Timer Handler
+   ******************************************************************************
+   */
+
+TIM_HandleTypeDef getTimer (void)
 {
-	return timer;
+    return timer;
 }
 
 /**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM1 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+   ******************************************************************************
+   * @brief      Period elapsed callback in non blocking mode
+   * @note       This function is called  when TIM1 interrupt took place, inside
+   *             HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+   *             a global variable "uwTick" used as application time base.
+   * @param[in]  htim - TIM handle
+   * @retval     None
+   ******************************************************************************
+   */
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *htim)
 {
-
-    if (htim->Instance == TIM1) {
-        HAL_IncTick();
+    if (htim->Instance == TIM1)
+    {
+        HAL_IncTick ();
     }
-
 }

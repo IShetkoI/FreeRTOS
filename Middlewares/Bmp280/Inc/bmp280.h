@@ -10,7 +10,10 @@
 #ifndef BMP280_H
 #define BMP280_H
 
-/* Define to prevent recursive inclusion --------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "bmp280_defines.h"
 #include "stdbool.h"
 #include "stdio.h"
@@ -26,8 +29,8 @@
 /// Contains the values of the last measurement
 typedef struct
 {
-	int temperature; ///< Measured temperature
-	int pressure;    ///< Measured pressure
+    int temperature; ///< Measured temperature
+    int pressure;    ///< Measured pressure
 } Measurement;
 
 
@@ -63,8 +66,8 @@ typedef struct
 /// Contains basic information about the sensor
 typedef struct
 {
-    SPI_HandleTypeDef             handle;                 ///< SPI handle pointer
-    uint8_t                       deviceID;               ///< Device ID
+    SPI_HandleTypeDef      handle;                 ///< SPI handle pointer
+    uint8_t                deviceID;               ///< Device ID
     Measurement            measurement;            ///< Structure of the values of the last measurement
     CompensationParameters compensationParameters; ///< Compensation parameter structure
     Configuration          configuration;          ///< Current sensor configuration structure
@@ -301,5 +304,8 @@ void spiCsHigh (uint8_t crystalSelectPin);
 
 void spiCsLow (uint8_t crystalSelectPin);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif //BMP280_H

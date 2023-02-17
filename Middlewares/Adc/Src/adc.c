@@ -1,87 +1,136 @@
-#include "adc.h"            ///< The size of the temporary array for filtering
+/**
+  ******************************************************************************
+  * @file    adc.c
+  * @brief   This file provides code for the configuration
+  *          of the ADC instances.
+  ******************************************************************************
+  */
+
+#include "adc.h"
+
+#define NUMBERS_IN_FILTER 8   ///< The size of the temporary array for filtering
+
+static ADC_HandleTypeDef adc; ///< Pointer ADC Handler
 
 static uint16_t filter (uint16_t newValue);
 
-ADC_HandleTypeDef adc;
 
-/* ADC1 init function */
-void MX_ADC1_Init(void)
+/**
+   ******************************************************************************
+   * @brief    ADC initialization function
+   * @ingroup  adc
+   ******************************************************************************
+   */
+
+void initializeADC (void)
 {
 
-  ADC_ChannelConfTypeDef sConfig = {0};
+    ADC_ChannelConfTypeDef sConfig = {0};
 
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
-  */
-  adc.Instance = ADC1;
-  adc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  adc.Init.Resolution = ADC_RESOLUTION_12B;
-  adc.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  adc.Init.ContinuousConvMode = DISABLE;
-  adc.Init.DiscontinuousConvMode = DISABLE;
-  adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  adc.Init.NbrOfConversion = 1;
-  adc.Init.DMAContinuousRequests = DISABLE;
-  adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&adc) != HAL_OK)
-  {
-    errorHandler();
-  }
-
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-  */
-  sConfig.Channel = ADC_CHANNEL_3;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&adc, &sConfig) != HAL_OK)
-  {
-    errorHandler();
-  }
-}
-
-void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
-{
-
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(adcHandle->Instance==ADC1)
-  {
-
-    /* ADC1 clock enable */
-    __HAL_RCC_ADC1_CLK_ENABLE();
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**ADC1 GPIO Configuration
-    PA3     ------> ADC1_IN3
+    /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    adc.Instance                   = ADC1;
+    adc.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV4;
+    adc.Init.Resolution            = ADC_RESOLUTION_12B;
+    adc.Init.ScanConvMode          = ADC_SCAN_DISABLE;
+    adc.Init.ContinuousConvMode    = DISABLE;
+    adc.Init.DiscontinuousConvMode = DISABLE;
+    adc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    adc.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+    adc.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+    adc.Init.NbrOfConversion       = 1;
+    adc.Init.DMAContinuousRequests = DISABLE;
+    adc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
 
-  }
+    ASSERT (HAL_ADC_Init (&adc) != HAL_OK);
+
+    /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+    */
+    sConfig.Channel      = ADC_CHANNEL_3;
+    sConfig.Rank         = ADC_REGULAR_RANK_1;
+    sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+
+    ASSERT (HAL_ADC_ConfigChannel (&adc, &sConfig) != HAL_OK);
 }
 
-void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
+
+/**
+   ******************************************************************************
+   * @brief      This function configures the hardware resources used in this
+   *             example
+   * @ingroup    adc
+   * @param[in]  adcHandle - ADC handle pointer
+   ******************************************************************************
+   */
+
+void HAL_ADC_MspInit (ADC_HandleTypeDef *adcHandle)
 {
 
-  if(adcHandle->Instance==ADC1)
-  {
-    /* Peripheral clock disable */
-    __HAL_RCC_ADC1_CLK_DISABLE();
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    if (adcHandle->Instance == ADC1)
+    {
 
-    /**ADC1 GPIO Configuration
-    PA3     ------> ADC1_IN3
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_3);
-  }
+        /* ADC1 clock enable */
+        __HAL_RCC_ADC1_CLK_ENABLE ();
+
+        __HAL_RCC_GPIOA_CLK_ENABLE ();
+        /**ADC1 GPIO Configuration
+        PA3     ------> ADC1_IN3
+        */
+        GPIO_InitStruct.Pin  = GPIO_PIN_3;
+        GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        HAL_GPIO_Init (GPIOA, &GPIO_InitStruct);
+    }
 }
 
+
+/**
+   ******************************************************************************
+   * @brief      This function freeze the hardware resources used in this example
+   * @ingroup    adc
+   * @param[in]  adcHandle - ADC handle pointer
+   ******************************************************************************
+   */
+
+void HAL_ADC_MspDeInit (ADC_HandleTypeDef *adcHandle)
+{
+
+    if (adcHandle->Instance == ADC1)
+    {
+        /* Peripheral clock disable */
+        __HAL_RCC_ADC1_CLK_DISABLE ();
+
+        /**ADC1 GPIO Configuration
+        PA3     ------> ADC1_IN3
+        */
+        HAL_GPIO_DeInit (GPIOA, GPIO_PIN_3);
+    }
+}
+
+
+/**
+   ******************************************************************************
+   * @brief      ADC DMA startup function
+   * @ingroup    adc
+   * @return     ADC start status
+   ******************************************************************************
+   */
 
 HAL_StatusTypeDef startADC (void)
 {
-	return HAL_ADC_Start(&adc);
+    return HAL_ADC_Start (&adc);
 }
+
+
+/**
+   ******************************************************************************
+   * @brief      Input values filtering function
+   * @ingroup    adc
+   * @param[in]  newValue - New value for filtering from ADC
+   * @return     Average value
+   ******************************************************************************
+   */
 
 static uint16_t filter (uint16_t newValue)
 {
@@ -99,19 +148,36 @@ static uint16_t filter (uint16_t newValue)
     return (average / NUMBERS_IN_FILTER);
 }
 
-uint16_t getAdcValue(void)
+
+/**
+   ******************************************************************************
+   * @brief      Function for taking a value from the ADC
+   * @ingroup    adc
+   * @return     Value from ADC
+   ******************************************************************************
+   */
+
+uint16_t getAdcValue (void)
 {
+    uint16_t currentValue = HAL_ADC_GetValue (&adc);
+    currentValue = filter (currentValue);
+    HAL_ADC_Stop (&adc);
+    HAL_ADC_Start (&adc);
+    HAL_ADC_PollForConversion (&adc, 100);
 
-	uint16_t currentValue = HAL_ADC_GetValue(&adc);
-	currentValue = filter(currentValue);
-	HAL_ADC_Stop(&adc);
-	HAL_ADC_Start(&adc);
-	HAL_ADC_PollForConversion(&adc, 100);
-
-	return currentValue;
+    return currentValue;
 }
 
-ADC_HandleTypeDef getADC(void)
+
+/**
+   ******************************************************************************
+   * @brief      Function for passing a pointer to a ADC
+   * @ingroup    adc
+   * @return     Pointer ADC Handler
+   ******************************************************************************
+   */
+
+ADC_HandleTypeDef getADC (void)
 {
-	return adc;
+    return adc;
 }

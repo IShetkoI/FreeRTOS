@@ -1,15 +1,15 @@
 /**
    ******************************************************************************
    * @file    spi.c
-   * @author  Ivan Shetska
    * @brief   This is the common part of the Spi initialization
    ******************************************************************************
    */
 
 #include "spi.h"
 
+#define CRC_POLYNOMIAL 10       ///< Initial value for CRC polynomial
 
-SPI_HandleTypeDef hspi1; ///< Pointer to the descriptor of the selected SPI hardware device
+static SPI_HandleTypeDef hspi1; ///< Pointer to the descriptor of the selected SPI hardware device
 
 
 HAL_StatusTypeDef initializeSpi (void)
@@ -26,14 +26,11 @@ HAL_StatusTypeDef initializeSpi (void)
     hspi1.Init.FirstBit          = SPI_FIRSTBIT_MSB;
     hspi1.Init.TIMode            = SPI_TIMODE_DISABLE;
     hspi1.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
-    hspi1.Init.CRCPolynomial     = 10;
+    hspi1.Init.CRCPolynomial     = CRC_POLYNOMIAL;
     hspi1.Init.CRCLength         = SPI_CRC_LENGTH_DATASIZE;
     hspi1.Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
 
-    if (HAL_SPI_Init (&hspi1) != HAL_OK)
-        return HAL_ERROR;
-    else
-        return HAL_OK;
+    ASSERT (HAL_SPI_Init (&hspi1) != HAL_OK);
 }
 
 

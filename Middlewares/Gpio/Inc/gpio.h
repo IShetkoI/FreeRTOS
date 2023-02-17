@@ -1,3 +1,10 @@
+/**
+   ******************************************************************************
+   * @file    gpio.h
+   * @brief   This file contains prototype functions to initialize the GPIO
+   *          peripheral
+   ******************************************************************************
+   */
 
 #ifndef __GPIO_H__
 #define __GPIO_H__
@@ -6,10 +13,22 @@
 extern "C" {
 #endif
 
-#include "../../../Core/Inc/main.h"
+#include "main.h"
 
-void MX_GPIO_Init(void);
 
+/**
+   ******************************************************************************
+   * @defgroup  gpio GPIO
+   * @brief     This module is designed to initialize the GPIO peripheral
+   ******************************************************************************
+   * @{
+   */
+
+void initializeGPIO (void);
+
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }

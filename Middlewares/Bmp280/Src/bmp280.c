@@ -10,13 +10,13 @@
 
 
 StatusCodes initializeBmp280 (BMP280 *device,
-                                   SPI_HandleTypeDef *handle,
-                                   uint8_t deviceID,
-                                   Oversampling pressureOversampling,
-                                   Oversampling temperatureOversampling,
-                                   PowerMode powerMode,
-                                   FilterCoefficient filterCoefficient,
-                                   StandbyTime standbyTime)
+                              SPI_HandleTypeDef *handle,
+                              uint8_t deviceID,
+                              Oversampling pressureOversampling,
+                              Oversampling temperatureOversampling,
+                              PowerMode powerMode,
+                              FilterCoefficient filterCoefficient,
+                              StandbyTime standbyTime)
 {
     /* Status storage */
     StatusCodes status = BMP280_OK;
@@ -26,7 +26,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     {
         /* Error handling */
         status = BMP280_ERROR_INVALID_SPI_INSTANCE;
-        errorHandler();
+        errorHandler ();
     }
     else
     {
@@ -38,7 +38,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     if (deviceID == 0)
     {
         status = BMP280_ERROR_INVALID_CRYSTAL_SELECT_PIN;
-        errorHandler();
+        errorHandler ();
     }
     else
     {
@@ -53,7 +53,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     if (powerMode == 0)
     {
         status = BMP280_ERROR_INVALID_POWER_MODE;
-        errorHandler();
+        errorHandler ();
     }
     else
     {
@@ -68,7 +68,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     status = readPartID (device);
 
     if (status != BMP280_OK)
-    	errorHandler();
+        errorHandler ();
 
 
     /* Reset sensor */
@@ -101,7 +101,7 @@ StatusCodes readPartID (BMP280 *device)
     if (chipID != BMP280_CHIP_ID)
     {
         status = BMP280_ERROR_INVALID_DEVICE_ID;
-        errorHandler();
+        errorHandler ();
     }
 
     return status;
@@ -163,7 +163,7 @@ StatusCodes readCompensationParameters (BMP280 *device)
     if (buf[1] == 0)
     {
         status = BMP280_ERROR_READ_COMPENSATION_PARAMETERS;
-        errorHandler();
+        errorHandler ();
     }
 
     /* Memorize compensation parameters */
@@ -202,7 +202,7 @@ StatusCodes measure (BMP280 *device)
     /* Compensate values */
     device->measurement.temperature =
             (float) compensateTemperature (device, rawTemperature) / BMP280_COMPENSATION_TEMPERATURE;
-    device->measurement.pressure    = (float) compensatePressure (device, rawPressure) / BMP280_COMPENSATION_PRESSURE;
+    device->measurement.pressure = (float) compensatePressure (device, rawPressure) / BMP280_COMPENSATION_PRESSURE;
 
     /* Checking for the readiness of new measurements */
     bool isTemperatureNull = device->measurement.temperature == 0;

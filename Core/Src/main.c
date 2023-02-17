@@ -1,75 +1,64 @@
-
 #include "main.h"
 #include "cmsis_os.h"
 #include "adc.h"
+#include "clock.h"
 #include "dac.h"
 #include "dma.h"
+#include "gpio.h"
 #include "spi.h"
 #include "timer.h"
 #include "usart.h"
-#include "gpio.h"
 
-
-#include "bmp280.h"
-#include "spi.h"
-
-void MX_FREERTOS_Init(void);
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
+int main (void)
 {
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    initializeHAL ();
 
+    /* Configure the system clock */
+    initializeClock ();
 
-  /* Configure the system clock */
-  initializeClock();
+    /* Initialize all configured peripherals */
 
-  /* Initialize all configured peripherals */
+    initializeDMA ();
+    initializeADC ();
+    initializeDAC ();
+    initializeTimer6 ();
 
-  MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_DAC_Init();
-  MX_TIM6_Init();
+    initializeSpi ();
+    initializeUsart ();
+    initializeGPIO ();
 
-  initializeSpi();
-  initializeUsart();
-  MX_GPIO_Init();
+    startTimerBase ();
 
-  startTimerBase();
+    /* Init scheduler */
+    osKernelInitialize ();
+    initializeFreeRTOS ();
 
+    /* Start scheduler */
+    osKernelStart ();
 
-
-
-  /* Init scheduler */
-  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
-  MX_FREERTOS_Init();
-
-  /* Start scheduler */
-  osKernelStart();
-
-  while (1)
-  {
-
-  }
+    while (1)
+    {
+    }
 }
-
 
 
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
-void errorHandler(void)
+void errorHandler (void)
 {
-  __disable_irq();
-  while (1)
-  {
-  }
+    __disable_irq ();
+    while (1)
+    {
+    }
 }
 
 

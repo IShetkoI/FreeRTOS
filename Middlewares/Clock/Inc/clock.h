@@ -11,8 +11,11 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* Define to prevent recursive inclusion --------------------------------------*/
+
 #include "main.h"
 
 /**
@@ -36,5 +39,9 @@ void initializeClock (void);
 /**
   * @}
   */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CLOCK_H: */

@@ -1,3 +1,11 @@
+/**
+  ******************************************************************************
+  * @file    dma.h
+  * @brief   This file contains all the function prototypes for
+  *          the dma.c file
+  ******************************************************************************
+  */
+
 #ifndef __DMA_H__
 #define __DMA_H__
 
@@ -5,10 +13,22 @@
 extern "C" {
 #endif
 
-#include "../../../Core/Inc/main.h"
+#include "main.h"
 
-void MX_DMA_Init(void);
 
+/**
+   ******************************************************************************
+   * @defgroup  dma DMA
+   * @brief     This module is designed to initialize the DMA
+   ******************************************************************************
+   * @{
+   */
+
+void initializeDMA (void);
+
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }

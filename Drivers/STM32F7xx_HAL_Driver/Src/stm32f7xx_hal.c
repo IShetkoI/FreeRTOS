@@ -135,7 +135,7 @@ HAL_TickFreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT;  /* 1KHz */
   *         to have correct HAL operation.
   * @retval HAL status
   */
-HAL_StatusTypeDef HAL_Init(void)
+HAL_StatusTypeDef initializeHAL(void)
 {
   /* Configure Instruction cache through ART accelerator */ 
 #if (ART_ACCELERATOR_ENABLE != 0)

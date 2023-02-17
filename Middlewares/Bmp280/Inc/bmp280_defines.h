@@ -9,7 +9,10 @@
 #ifndef BMP280_DEFINES_H_
 #define BMP280_DEFINES_H_
 
-/* Define to prevent recursive inclusion --------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "main.h"
 
 
@@ -64,9 +67,7 @@ typedef enum
 /// Possible operating modes of the sensor
 typedef enum
 {
-    mode_sleep  = 0b00,
-    mode_forced = 0b01,
-    mode_normal = 0b11
+    mode_sleep = 0b00, mode_forced = 0b01, mode_normal = 0b11
 } PowerMode;
 
 
@@ -87,11 +88,7 @@ typedef enum
 /// Possible variants of filtering coefficients
 typedef enum
 {
-    filter_off      = 0b000,
-    filter_coeff_2  = 0b001,
-    filter_coeff_4  = 0b010,
-    filter_coeff_8  = 0b011,
-    filter_coeff_16 = 0b100
+    filter_off = 0b000, filter_coeff_2 = 0b001, filter_coeff_4 = 0b010, filter_coeff_8 = 0b011, filter_coeff_16 = 0b100
 } FilterCoefficient;
 
 
@@ -110,5 +107,10 @@ typedef enum
     BMP280_ERROR_READ_COMPENSATION_PARAMETERS,
     BMP280_ERROR_READ_WRITE,
 } StatusCodes;
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* BMP280_DEFINES_H_ */

@@ -1,3 +1,10 @@
+/**
+  ******************************************************************************
+  * @file    timer.h
+  * @brief   This file contains all the function prototypes for
+  *          the timer.c file
+  ******************************************************************************
+  */
 
 #ifndef __TIM_H__
 #define __TIM_H__
@@ -6,16 +13,27 @@
 extern "C" {
 #endif
 
-#include "../../../Core/Inc/main.h"
+#include "main.h"
 
+/**
+   ******************************************************************************
+   * @defgroup  timer Timer
+   * @brief     This module is designed to initialize the Timer
+   ******************************************************************************
+   * @{
+   */
 
-void MX_TIM6_Init(void);
+void initializeTimer6 (void);
 
 void setTimerConfig (uint16_t adcValue);
 
-void startTimerBase(void);
+void startTimerBase (void);
 
-TIM_HandleTypeDef getTimer(void);
+TIM_HandleTypeDef getTimer (void);
+
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }

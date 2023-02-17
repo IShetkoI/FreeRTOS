@@ -1,3 +1,11 @@
+/**
+  ******************************************************************************
+  * @file    adc.h
+  * @brief   This file contains all the function prototypes for
+  *          the adc.c file
+  ******************************************************************************
+  */
+
 #ifndef __ADC_H__
 #define __ADC_H__
 
@@ -5,17 +13,28 @@
 extern "C" {
 #endif
 
-#include "../../../Core/Inc/main.h"
+#include "main.h"
 
-#define NUMBERS_IN_FILTER 8
 
-void MX_ADC1_Init(void);
+/**
+   ******************************************************************************
+   * @defgroup  adc ADC
+   * @brief     This module is designed to initialize the ADC peripheral
+   ******************************************************************************
+   * @{
+   */
+
+void initializeADC (void);
 
 HAL_StatusTypeDef startADC (void);
 
-uint16_t getAdcValue(void);
+uint16_t getAdcValue (void);
 
-ADC_HandleTypeDef getADC(void);
+ADC_HandleTypeDef getADC (void);
+
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }

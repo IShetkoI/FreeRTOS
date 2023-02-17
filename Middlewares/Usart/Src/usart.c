@@ -1,15 +1,16 @@
 /**
    ******************************************************************************
    * @file    usart.c
-   * @author  Ivan Shetska
    * @brief   This is the common part of the USART initialization
    ******************************************************************************
    */
 
 #include "usart.h"
 
+#define BAUD_RATE 115200         ///< Information transfer rate
+#define UART_SIZE 1              ///< Package size
 
-UART_HandleTypeDef usart; ///< Pointer to configuration structure
+static UART_HandleTypeDef usart; ///< Pointer to configuration structure
 
 
 HAL_StatusTypeDef initializeUsart (void)
@@ -25,10 +26,7 @@ HAL_StatusTypeDef initializeUsart (void)
     usart.Init.OneBitSampling         = UART_ONE_BIT_SAMPLE_DISABLE;
     usart.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
 
-    if (HAL_UART_Init (&usart) != HAL_OK)
-        return HAL_ERROR;
-
-    return HAL_OK;
+    return HAL_UART_Init (&usart);
 }
 
 
@@ -51,8 +49,7 @@ void HAL_UART_MspInit (UART_HandleTypeDef *huart)
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3;
         PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
 
-        if (HAL_RCCEx_PeriphCLKConfig (&PeriphClkInitStruct) != HAL_OK)
-            return HAL_ERROR;
+        ASSERT (HAL_RCCEx_PeriphCLKConfig (&PeriphClkInitStruct) != HAL_OK);
 
         /* Peripheral clock enable */
         __HAL_RCC_USART3_CLK_ENABLE ();
@@ -118,7 +115,3 @@ int __io_putchar (int symbol)
     return symbol;
 }
 
-UART_HandleTypeDef getUSART(void)
-{
-	return usart;
-}

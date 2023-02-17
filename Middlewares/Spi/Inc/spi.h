@@ -1,7 +1,6 @@
 /**
    ******************************************************************************
-   * @file    spi_initialization.h
-   * @author  Ivan Shetska
+   * @file    spi.h
    * @brief   This file contains prototype function to initialize the I2C
    *          interface
    ******************************************************************************
@@ -11,12 +10,11 @@
 #ifndef SPI_INITIALIZATION_H
 #define SPI_INITIALIZATION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* Define to prevent recursive inclusion --------------------------------------*/
-#include "../../../Core/Inc/main.h"
-
-
-#define CRC_POLYNOMIAL 7
+#include "main.h"
 
 
 /**
@@ -52,6 +50,9 @@ SPI_HandleTypeDef getPointerSpi (void);
   * @}
   */
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPI_INITIALIZATION_H: */
 
