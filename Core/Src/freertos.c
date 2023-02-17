@@ -5,7 +5,7 @@
 
 #include "adc.h"
 #include "dac.h"
-#include "tim.h"
+#include "timer.h"
 #include "gpio.h"
 #include "usart.h"
 #include "spi.h"

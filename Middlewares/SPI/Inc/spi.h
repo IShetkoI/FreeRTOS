@@ -13,7 +13,7 @@
 
 
 /* Define to prevent recursive inclusion --------------------------------------*/
-#include "main.h"
+#include "../../../Core/Inc/main.h"
 
 
 #define CRC_POLYNOMIAL 7

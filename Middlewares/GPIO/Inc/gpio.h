@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-#include "main.h"
+#include "../../../Core/Inc/main.h"
 
 void MX_GPIO_Init(void);
 

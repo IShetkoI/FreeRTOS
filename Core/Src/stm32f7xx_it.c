@@ -1,7 +1,7 @@
 
 #include "main.h"
 #include "stm32f7xx_it.h"
-#include "tim.h"
+#include "timer.h"
 #include "dac.h"
 
 

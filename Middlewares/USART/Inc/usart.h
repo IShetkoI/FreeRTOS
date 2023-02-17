@@ -12,7 +12,7 @@
 
 
 /* Define to prevent recursive inclusion --------------------------------------*/
-#include "main.h"
+#include "../../../Core/Inc/main.h"
 
 
 /**

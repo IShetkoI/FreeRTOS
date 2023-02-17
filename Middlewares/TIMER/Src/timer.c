@@ -1,5 +1,5 @@
 
-#include "tim.h"
+#include "timer.h"
 
 static uint16_t interpolation (uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y1, uint16_t y3);
 

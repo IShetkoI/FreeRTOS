@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "main.h"
+#include "../../../Core/Inc/main.h"
 
 #define NUMBERS_IN_FILTER 8
 
