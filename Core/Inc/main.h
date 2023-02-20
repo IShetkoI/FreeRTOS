@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
-#include "stm32f7xx_hal.h"
+
+#include <stm32f7xx_hal.h>
+
 
 #define CRYSTAL_SELECT_Pin       GPIO_PIN_3
 #define CRYSTAL_SELECT_GPIO_Port GPIOE
@@ -17,12 +19,6 @@ extern "C" {
 #define LED_BLUE_Pin             GPIO_PIN_7
 #define LED_BLUE_GPIO_Port       GPIOB
 
-
-/* Display the line number and file name where the error occurred and call the error handler */
-#define ASSERT(cond) if( cond ) { printf( "Assertion error line %d, file(%s)\n", \
-__LINE__, __FILE__ ); errorHandler();}
-
-void initializeFreeRTOS (void);
 
 void errorHandler (void);
 

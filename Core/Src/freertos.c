@@ -1,44 +1,12 @@
-#include "FreeRTOS.h"
-#include "task.h"
-#include "main.h"
-#include "cmsis_os.h"
+#include "freertos.h"
 
 #include "adc.h"
 #include "dac.h"
-#include "timer.h"
-#include "gpio.h"
 #include "usart.h"
-#include "spi.h"
-#include "string.h"
-#include "stdio.h"
-#include "stdbool.h"
 #include "bmp280.h"
 
 
-#define STACK_SIZE      4096
-#define STRING_SIZE     128
-#define FLASHING_PERIOD 250U
-#define MINIMUM_DELAY   1U
-
-typedef StaticTask_t      osStaticThreadDef_t;
-typedef StaticQueue_t     osStaticMessageQDef_t;
-typedef StaticSemaphore_t osStaticMutexDef_t;
-typedef StaticSemaphore_t osStaticSemaphoreDef_t;
-
-
-typedef struct
-{
-    char Buf[STRING_SIZE];
-}   queueUSART_t;
-
-
-typedef struct
-{
-    uint16_t Buf;
-}   queueADC_t;
-
-
-osSemaphoreId_t getButtonSemaphore (void);
+#define QUEUE_SIZE 10
 
 
 /* Definitions for taskDefault */
@@ -97,6 +65,7 @@ const osThreadAttr_t taskDAC_attributes =
         .priority = (osPriority_t) osPriorityLow,
         };
 
+
 /* Definitions for taskUSART */
 osThreadId_t         taskUSARTHandle;
 uint32_t             taskUSARTBuffer[STACK_SIZE];
@@ -113,7 +82,7 @@ const osThreadAttr_t taskUSART_attributes =
 
 /* Definitions for queueUSART */
 osMessageQueueId_t         queueUSARTHandle;
-uint8_t                    queueUSARTBuffer[10 * sizeof (queueUSART_t)];
+uint8_t                    queueUSARTBuffer[QUEUE_SIZE * sizeof (messageUSART_t)];
 osStaticMessageQDef_t      queueUSARTControlBlock;
 const osMessageQueueAttr_t queueUSART_attributes =
         {
@@ -125,7 +94,7 @@ const osMessageQueueAttr_t queueUSART_attributes =
         };
 /* Definitions for queueADC */
 osMessageQueueId_t         queueADCHandle;
-uint8_t                    queueADCBuffer[10 * sizeof (queueADC_t)];
+uint8_t                    queueADCBuffer[QUEUE_SIZE * sizeof (messageADC_t)];
 osStaticMessageQDef_t      queueADCControlBlock;
 const osMessageQueueAttr_t queueADC_attributes   =
         {
@@ -157,223 +126,238 @@ const osSemaphoreAttr_t semaphoreButton_attributes =
         };
 
 
-void startTaskDefault (void *argument);
-
-void startTaskBMP280 (void *argument);
-
-void startTaskADC (void *argument);
-
-void startTaskDAC (void *argument);
-
-void startTaskUSART (void *argument);
-
-void initializeFreeRTOS (void);
-
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-void initializeFreeRTOS (void)
-{
+   ******************************************************************************
+   * @brief      FreeRTOS initialization
+   * @ingroup    freertos
+   * @return     Status of initialization
+   ******************************************************************************
+   */
 
+osStatus_t initializeFreeRTOS (void)
+{
     mutexErrorHandle = osMutexNew (&mutexError_attributes);
+
+    if (mutexErrorHandle == NULL)
+    {
+        return osError;
+    }
 
     /* Create the semaphores(s) */
     /* creation of semaphoreButton */
     semaphoreButtonHandle = osSemaphoreNew (1, 1, &semaphoreButton_attributes);
 
+    if (semaphoreButtonHandle == NULL)
+    {
+        return osError;
+    }
 
     /* Create the queue(s) */
     /* creation of queueUSART */
-    queueUSARTHandle = osMessageQueueNew (10, sizeof (queueUSART_t), &queueUSART_attributes);
+    queueUSARTHandle = osMessageQueueNew (QUEUE_SIZE, sizeof (messageUSART_t), &queueUSART_attributes);
+
+    if (queueUSARTHandle == NULL)
+    {
+        return osError;
+    }
 
     /* creation of queueADC */
-    queueADCHandle = osMessageQueueNew (10, sizeof (queueADC_t), &queueADC_attributes);
+    queueADCHandle = osMessageQueueNew (QUEUE_SIZE, sizeof (messageADC_t), &queueADC_attributes);
 
+    if (queueADCHandle == NULL)
+    {
+        return osError;
+    }
 
     /* Create the thread(s) */
     /* creation of taskDefault */
     taskDefaultHandle = osThreadNew (startTaskDefault, NULL, &taskDefault_attributes);
 
+    if (taskDefaultHandle == NULL)
+    {
+        return osError;
+    }
+
     /* creation of taskBMP280 */
     taskBMP280Handle = osThreadNew (startTaskBMP280, NULL, &taskBMP280_attributes);
+
+    if (taskBMP280Handle == NULL)
+    {
+        return osError;
+    }
 
     /* creation of taskADC */
     taskADCHandle = osThreadNew (startTaskADC, NULL, &taskADC_attributes);
 
+    if (taskADCHandle == NULL)
+    {
+        return osError;
+    }
+
     /* creation of taskDAC */
     taskDACHandle = osThreadNew (startTaskDAC, NULL, &taskDAC_attributes);
+
+    if (taskDACHandle == NULL)
+    {
+        return osError;
+    }
 
     /* creation of taskUSART */
     taskUSARTHandle = osThreadNew (startTaskUSART, NULL, &taskUSART_attributes);
 
+    if (taskUSARTHandle == NULL)
+    {
+        return osError;
+    }
+
+    return osOK;
 }
 
+
 /**
-  * @brief  Function implementing the taskDefault thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+   ******************************************************************************
+   * @brief        Function implementing the taskDefault thread.
+   * @ingroup      freertos
+   * @param[in]    argument - Not used
+   ******************************************************************************
+   */
+
 void startTaskDefault (void *argument)
 {
+    osStatus_t osStatus;
+
     for (;;)
     {
         if (osMutexGetOwner (mutexErrorHandle) != NULL)
         {
             HAL_GPIO_WritePin (LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_RESET);
             HAL_GPIO_TogglePin (LED_RED_GPIO_Port, LED_RED_Pin);
-            osDelay (FLASHING_PERIOD);
-        }
 
-        osDelay (MINIMUM_DELAY);
-    }
-}
+            osStatus = osDelay (FLASHING_PERIOD);
 
-/**
-* @brief Function implementing the taskBMP280 thread.
-* @param argument: Not used
-* @retval None
-*/
-void startTaskBMP280 (void *argument)
-{
-    queueUSART_t      messageUSART;
-    BMP280            bmp280;
-    char              temp[STRING_SIZE] = "";
-    SPI_HandleTypeDef hspi1             = getPointerSpi ();
-
-    if (initializeBmp280 (&bmp280, &hspi1, CRYSTAL_SELECT_Pin, oversampling_x16, oversampling_x2, mode_normal,
-                          filter_coeff_16, standby_time_500us) != BMP280_OK)
-    {
-        osMutexAcquire (mutexErrorHandle, osWaitForever);
-    }
-
-    for (;;)
-    {
-        if (osMutexGetOwner (mutexErrorHandle) == NULL)
-        {
-            if (osSemaphoreGetCount (semaphoreButtonHandle) == 0)
+            if (osStatus != osOK)
             {
-                measure (&bmp280);
-                strcpy (messageUSART.Buf, "Temperature - ");
-                sprintf (temp, "%d", bmp280.measurement.temperature);
-                strcat (messageUSART.Buf, temp);
-
-                strcat (messageUSART.Buf, ";   Pressure - ");
-                sprintf (temp, "%d", bmp280.measurement.pressure);
-                strcat (messageUSART.Buf, temp);
-
-                osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
-
-                HAL_GPIO_TogglePin (LED_BLUE_GPIO_Port, LED_BLUE_Pin);
-                osDelay (FLASHING_PERIOD);
+                errorHandler ();
             }
         }
 
-        osDelay (MINIMUM_DELAY);
-    }
-}
+        osStatus = osDelay (MINIMUM_DELAY);
 
-/**
-* @brief Function implementing the taskADC thread.
-* @param argument: Not used
-* @retval None
-*/
-void startTaskADC (void *argument)
-{
-    if (startADC () != HAL_OK)
-    {
-        osMutexAcquire (mutexErrorHandle, osWaitForever);
-    }
-
-    queueADC_t messageADC;
-
-    for (;;)
-    {
-        if (osMutexGetOwner (mutexErrorHandle) == NULL)
+        if (osStatus != osOK)
         {
-            messageADC.Buf = getAdcValue ();
-            osMessageQueuePut (queueADCHandle, &messageADC, 0, osWaitForever);
+            errorHandler ();
         }
-
-        osDelay (MINIMUM_DELAY);
     }
 }
 
 
 /**
-* @brief Function implementing the taskDAC thread.
-* @param argument: Not used
-* @retval None
-*/
-void startTaskDAC (void *argument)
+   ******************************************************************************
+   * @brief      Getting a handler to mutexErrorHandle
+   * @ingroup    freertos
+   * @return     Handler to mutexErrorHandle
+   ******************************************************************************
+  */
+
+osMutexId_t getMutexErrorHandle (void)
 {
-    if (startDAC () != HAL_OK)
-    {
-        osMutexAcquire (mutexErrorHandle, osWaitForever);
-    }
-
-    queueADC_t   messageADC;
-    queueUSART_t messageUSART;
-
-
-    for (;;)
-    {
-        if (osMutexGetOwner (mutexErrorHandle) == NULL)
-        {
-            if (osMessageQueueGetCount (queueADCHandle) != 0)
-            {
-                if (osMessageQueueGet (queueADCHandle, &messageADC, 0, osWaitForever) == osOK)
-                {
-                    setTimerConfig (messageADC.Buf);
-
-                    char temp[STRING_SIZE] = "";
-
-                    sprintf (temp, "%d", messageADC.Buf);
-
-                    strcpy (messageUSART.Buf, "ADC value - ");
-                    strcat (messageUSART.Buf, temp);
-
-                    osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
-                }
-            }
-        }
-
-        osDelay (MINIMUM_DELAY);
-    }
+    return mutexErrorHandle;
 }
 
 
 /**
-* @brief Function implementing the taskUSART thread.
-* @param argument: Not used
-* @retval None
-*/
-void startTaskUSART (void *argument)
-{
-    queueUSART_t messageUSART;
+   ******************************************************************************
+   * @brief      Getting a handler to semaphoreButtonHandle
+   * @ingroup    freertos
+   * @return     Handler to semaphoreButtonHandle
+   ******************************************************************************
+  */
 
-
-    for (;;)
-    {
-        if (osMutexGetOwner (mutexErrorHandle) == NULL)
-        {
-            if (osMessageQueueGetCount (queueUSARTHandle) != 0)
-            {
-                if (osMessageQueueGet (queueUSARTHandle, &messageUSART, 0, osWaitForever) == osOK)
-                {
-                    strcat (messageUSART.Buf, "\r\n\0");
-                    printf ("%s", messageUSART.Buf);
-                }
-            }
-        }
-        osDelay (MINIMUM_DELAY);
-    }
-}
-
-
-osSemaphoreId_t getButtonSemaphore (void)
+osSemaphoreId_t getSemaphoreButtonHandle (void)
 {
     return semaphoreButtonHandle;
 }
 
+
+/**
+   ******************************************************************************
+   * @brief      Getting a handler to taskADCHandle
+   * @ingroup    freertos
+   * @return     Handler to taskADCHandle
+   ******************************************************************************
+  */
+
+osThreadId_t getTaskAdcHandle (void)
+{
+    return taskADCHandle;
+}
+
+
+/**
+   ******************************************************************************
+   * @brief      Getting a handler to taskBMP280Handle
+   * @ingroup    freertos
+   * @return     Handler to taskBMP280Handle
+   ******************************************************************************
+  */
+
+osThreadId_t getTaskBmp280Handle (void)
+{
+    return taskBMP280Handle;
+}
+
+
+/**
+   ******************************************************************************
+   * @brief      Getting a handler to taskDACHandle
+   * @ingroup    freertos
+   * @return     Handler to taskDACHandle
+   ******************************************************************************
+  */
+
+osThreadId_t getTaskDacHandle (void)
+{
+    return taskDACHandle;
+}
+
+
+/**
+   ******************************************************************************
+   * @brief      Getting a handler to taskUSARTHandle
+   * @ingroup    freertos
+   * @return     Handler to taskUSARTHandle
+   ******************************************************************************
+  */
+
+osThreadId_t getTaskUsartHandle (void)
+{
+    return taskUSARTHandle;
+}
+
+
+/**
+   ******************************************************************************
+   * @brief      Getting a handler to queueADCHandle
+   * @ingroup    freertos
+   * @return     Handler to queueADCHandle
+   ******************************************************************************
+  */
+
+osMessageQueueId_t getQueueAdcHandle (void)
+{
+    return queueADCHandle;
+}
+
+
+/**
+   ******************************************************************************
+   * @brief      Getting a handler to queueUSARTHandle
+   * @ingroup    freertos
+   * @return     Handler to queueUSARTHandle
+   ******************************************************************************
+  */
+
+osMessageQueueId_t getQueueUsartHandle (void)
+{
+    return queueUSARTHandle;
+}
