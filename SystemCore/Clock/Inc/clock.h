@@ -1,9 +1,8 @@
 /**
    ******************************************************************************
-   * @file    clock.h
-   * @author  Ivan Shetska
-   * @brief   This file contains prototype function to configure the System
-   *          clock
+   * @file     clock.h
+   * @brief    This file contains prototype function to configure the System
+   *           clock
    ******************************************************************************
    */
 
@@ -20,21 +19,22 @@ extern "C" {
 
 /**
    ******************************************************************************
-   * @defgroup clock Clock
-   * @brief    This module is designed to configure the System clock
+   * @defgroup    clock Clock
+   * @brief       This module is designed to configure the System clock
    ******************************************************************************
    * @{
    */
 
+
 /**
    ******************************************************************************
-   * @brief   Clock initialization function
-   * @param   None
-   * @returns Status of the initialization
+   * @brief      Clock initialization function
+   * @return     Status of the initialization
    ******************************************************************************
   */
 
-void initializeClock (void);
+HAL_StatusTypeDef initializeClock (void);
+
 
 /**
   * @}

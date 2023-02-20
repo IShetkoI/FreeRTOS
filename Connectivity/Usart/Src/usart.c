@@ -1,19 +1,27 @@
 /**
    ******************************************************************************
-   * @file    usart.c
-   * @brief   This is the common part of the USART initialization
+   * @file     usart.c
+   * @brief    This is the common part of the USART initialization
    ******************************************************************************
    */
 
 #include "usart.h"
-#include "freertos.h"
-#include <string.h>
+
 
 #define BAUD_RATE 115200         ///< Information transfer rate
 #define UART_SIZE 1              ///< Package size
 
+
 static UART_HandleTypeDef usart; ///< Pointer to configuration structure
 
+
+/**
+   ******************************************************************************
+   * @brief      USART initialization function
+   * @ingroup    usart
+   * @return     Status of the initialization
+   ******************************************************************************
+  */
 
 HAL_StatusTypeDef initializeUsart (void)
 {
@@ -34,9 +42,11 @@ HAL_StatusTypeDef initializeUsart (void)
 
 /**
    ******************************************************************************
-   * @brief  UART MSP Initialization
-   *         This function configures the hardware resources used in this example
-   * @param  huart - UART handle pointer
+   * @brief        UART MSP Initialization
+   *               This function configures the hardware resources used in this
+   *               example
+   * @ingroup      usart
+   * @param[in]    huart - UART handle pointer
    ******************************************************************************
    */
 
@@ -51,7 +61,8 @@ void HAL_UART_MspInit (UART_HandleTypeDef *huart)
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3;
         PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
 
-        ASSERT (HAL_RCCEx_PeriphCLKConfig (&PeriphClkInitStruct) != HAL_OK);
+        if (HAL_RCCEx_PeriphCLKConfig (&PeriphClkInitStruct) != HAL_OK)
+            errorHandler ();
 
         /* Peripheral clock enable */
         __HAL_RCC_USART3_CLK_ENABLE ();
@@ -74,9 +85,11 @@ void HAL_UART_MspInit (UART_HandleTypeDef *huart)
 
 /**
    ******************************************************************************
-   * @brief  UART MSP De-Initialization
-   *         This function freeze the hardware resources used in this example
-   * @param  huart - UART handle pointer
+   * @brief        UART MSP De-Initialization
+   *               This function freeze the hardware resources used in this
+   *               example
+   * @ingroup      usart
+   * @param[in]    huart - UART handle pointer
    ******************************************************************************
    */
 
@@ -98,9 +111,10 @@ void HAL_UART_MspDeInit (UART_HandleTypeDef *huart)
 
 /**
    ******************************************************************************
-   * @brief    Sending symbols over the COM port
-   * @param    symbol - Symbol to send
-   * @returns  Sending symbols over the COM port
+   * @brief        Sending symbols over the COM port
+   * @ingroup      usart
+   * @param[in]    symbol - Symbol to send
+   * @return       Sending symbols over the COM port
    ******************************************************************************
   */
 
@@ -116,11 +130,20 @@ int __io_putchar (int symbol)
 }
 
 
+/**
+   ******************************************************************************
+   * @brief        Function implementing the taskUSART thread.
+   * @ingroup      usart
+   * @param[in]    argument - Not used
+   ******************************************************************************
+   */
+
 void startTaskUSART (void *argument)
 {
-    queueUSART_t messageUSART;
-    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle();
-    osMutexId_t mutexErrorHandle = getMutexErrorHandle ();
+    osStatus_t         osStatus;
+    messageUSART_t     messageUSART;
+    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle ();
+    osMutexId_t        mutexErrorHandle = getMutexErrorHandle ();
 
     for (;;)
     {
@@ -135,6 +158,12 @@ void startTaskUSART (void *argument)
                 }
             }
         }
-        osDelay (MINIMUM_DELAY);
+
+        osStatus = osDelay (MINIMUM_DELAY);
+
+        if (osStatus != osOK)
+        {
+            errorHandler ();
+        }
     }
 }

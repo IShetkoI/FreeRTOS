@@ -1,7 +1,6 @@
 /**
    ******************************************************************************
    * @file    bmp280.c
-   * @author  Ivan Shetska
    * @brief   This is the common part of the BMP280 sensor
    ******************************************************************************
    */
@@ -27,9 +26,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     /* If no data exchange interface has been set */
     if (handle->Instance == 0)
     {
-        /* Error handling */
-        status = BMP280_ERROR_INVALID_SPI_INSTANCE;
-        errorHandler ();
+        return BMP280_ERROR_INVALID_SPI_INSTANCE;
     }
     else
     {
@@ -40,8 +37,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     /* If no sensor pin has been set */
     if (deviceID == 0)
     {
-        status = BMP280_ERROR_INVALID_CRYSTAL_SELECT_PIN;
-        errorHandler ();
+        return BMP280_ERROR_INVALID_CRYSTAL_SELECT_PIN;
     }
     else
     {
@@ -55,8 +51,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     /* If no power mode has been set */
     if (powerMode == 0)
     {
-        status = BMP280_ERROR_INVALID_POWER_MODE;
-        errorHandler ();
+        return BMP280_ERROR_INVALID_POWER_MODE;
     }
     else
     {
@@ -71,8 +66,9 @@ StatusCodes initializeBmp280 (BMP280 *device,
     status = readPartID (device);
 
     if (status != BMP280_OK)
-        errorHandler ();
-
+    {
+        return BMP280_ERROR_INVALID_DEVICE_ID;
+    }
 
     /* Reset sensor */
     softReset (device);
@@ -95,6 +91,7 @@ StatusCodes initializeBmp280 (BMP280 *device,
     return status;
 }
 
+
 StatusCodes readPartID (BMP280 *device)
 {
     StatusCodes status = BMP280_OK;
@@ -103,17 +100,18 @@ StatusCodes readPartID (BMP280 *device)
 
     if (chipID != BMP280_CHIP_ID)
     {
-        status = BMP280_ERROR_INVALID_DEVICE_ID;
-        errorHandler ();
+        return BMP280_ERROR_INVALID_DEVICE_ID;
     }
 
     return status;
 }
 
+
 void softReset (BMP280 *device)
 {
     writeRegister (device, BMP280_REG_RESET, BMP280_RESET_VALUE);
 }
+
 
 void setPressureOversampling (BMP280 *device)
 {
@@ -124,6 +122,7 @@ void setPressureOversampling (BMP280 *device)
     config = (config & BMP280_PRESSURE_OVERSAMPLING_MASK) | (device->configuration.pressureOversampling << 2);
     writeRegister (device, BMP280_REG_CTRL_MEAS, config);
 }
+
 
 void setTemperatureOversampling (BMP280 *device)
 {
@@ -140,6 +139,7 @@ void setPowerMode (BMP280 *device)
     writeRegister (device, BMP280_REG_CTRL_MEAS, config);
 }
 
+
 void setStandbyTime (BMP280 *device)
 {
     uint8_t config = readRegister (device, BMP280_REG_CONFIG);
@@ -147,12 +147,14 @@ void setStandbyTime (BMP280 *device)
     writeRegister (device, BMP280_REG_CONFIG, config);
 }
 
+
 void setFilterCoefficient (BMP280 *device)
 {
     uint8_t config = readRegister (device, BMP280_REG_CONFIG);
     config = (config & BMP280_FILTER_COEFFICIENT_MASK) | (device->configuration.filterCoefficient << 2);
     writeRegister (device, BMP280_REG_CONFIG, config);
 }
+
 
 StatusCodes readCompensationParameters (BMP280 *device)
 {
@@ -165,8 +167,7 @@ StatusCodes readCompensationParameters (BMP280 *device)
     /* If the values have not been read */
     if (buf[1] == 0)
     {
-        status = BMP280_ERROR_READ_COMPENSATION_PARAMETERS;
-        errorHandler ();
+        return BMP280_ERROR_READ_COMPENSATION_PARAMETERS;
     }
 
     /* Memorize compensation parameters */
@@ -222,19 +223,26 @@ StatusCodes measure (BMP280 *device)
 
 void startTaskBMP280 (void *argument)
 {
-    queueUSART_t      messageUSART;
-    BMP280            bmp280;
-    char              temp[STRING_SIZE] = "";
-    SPI_HandleTypeDef hspi1             = getPointerSpi ();
-    osMutexId_t mutexErrorHandle = getMutexErrorHandle();
-    osSemaphoreId_t semaphoreButtonHandle = getSemaphoreButtonHandle();
+    osStatus_t     osStatus;
+    messageUSART_t messageUSART;
+    BMP280         bmp280;
+    char           temp[STRING_SIZE];
 
-    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle();
+    SPI_HandleTypeDef hspi1               = getPointerSpi ();
+    osMutexId_t mutexErrorHandle          = getMutexErrorHandle();
+    osSemaphoreId_t semaphoreButtonHandle = getSemaphoreButtonHandle();
+    osMessageQueueId_t queueUSARTHandle   = getQueueUsartHandle();
+
 
     if (initializeBmp280 (&bmp280, &hspi1, CRYSTAL_SELECT_Pin, oversampling_x16, oversampling_x2, mode_normal,
                           filter_coeff_16, standby_time_500us) != BMP280_OK)
     {
-        osMutexAcquire (mutexErrorHandle, osWaitForever);
+        osStatus = osMutexAcquire (mutexErrorHandle, osWaitForever);
+
+        if ((osStatus == osErrorParameter) || (osStatus == osErrorISR))
+        {
+            errorHandler();
+        }
     }
 
     for (;;)
@@ -244,6 +252,7 @@ void startTaskBMP280 (void *argument)
             if (osSemaphoreGetCount (semaphoreButtonHandle) == 0)
             {
                 measure (&bmp280);
+
                 strcpy (messageUSART.Buf, "Temperature - ");
                 sprintf (temp, "%d", bmp280.measurement.temperature);
                 strcat (messageUSART.Buf, temp);
@@ -252,13 +261,29 @@ void startTaskBMP280 (void *argument)
                 sprintf (temp, "%d", bmp280.measurement.pressure);
                 strcat (messageUSART.Buf, temp);
 
-                osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
+                osStatus =osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
+
+                if (osStatus == osErrorParameter)
+                {
+                    errorHandler();
+                }
 
                 HAL_GPIO_TogglePin (LED_BLUE_GPIO_Port, LED_BLUE_Pin);
-                osDelay (FLASHING_PERIOD);
+
+                osStatus = osDelay (FLASHING_PERIOD);
+
+                if (osStatus != osOK)
+                {
+                    errorHandler();
+                }
             }
         }
 
-        osDelay (MINIMUM_DELAY);
+        osStatus = osDelay (MINIMUM_DELAY);
+
+        if (osStatus != osOK)
+        {
+            errorHandler();
+        }
     }
 }

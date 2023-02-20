@@ -4,15 +4,20 @@
 
 TIM_HandleTypeDef systemTimer;
 
+
 /**
-  * @brief  This function configures the TIM1 as a time base source.
-  *         The time source is configured  to have 1ms time base with a dedicated
-  *         Tick interrupt priority.
-  * @note   This function is called  automatically at the beginning of program after
-  *         reset by HAL_Init() or at any time when clock is configured, by HAL_RCC_ClockConfig().
-  * @param  TickPriority: Tick interrupt priority.
-  * @retval HAL status
-  */
+   ******************************************************************************
+   * @brief        This function configures the TIM1 as a time base source.
+   *               The time source is configured  to have 1ms time base with a
+   *               dedicated Tick interrupt priority.
+   * @note         This function is called  automatically at the beginning of
+   *               program after reset by HAL_Init() or at any time when clock
+   *               is configured, by HAL_RCC_ClockConfig().
+   * @param[in]    TickPriority - Tick interrupt priority.
+   * @return       HAL status
+   ******************************************************************************
+   */
+
 HAL_StatusTypeDef HAL_InitTick (uint32_t TickPriority)
 {
     RCC_ClkInitTypeDef clkconfig;
@@ -76,31 +81,43 @@ HAL_StatusTypeDef HAL_InitTick (uint32_t TickPriority)
     return status;
 }
 
+
 /**
-  * @brief  Suspend Tick increment.
-  * @note   Disable the tick increment by disabling TIM1 update interrupt.
-  * @param  None
-  * @retval None
+   ******************************************************************************
+   * @brief    Suspend Tick increment.
+   * @note     Disable the tick increment by disabling TIM1 update interrupt.
+   ******************************************************************************
   */
+
 void HAL_SuspendTick (void)
 {
     /* Disable TIM1 update Interrupt */
     __HAL_TIM_DISABLE_IT (&systemTimer, TIM_IT_UPDATE);
 }
 
+
 /**
-  * @brief  Resume Tick increment.
-  * @note   Enable the tick increment by Enabling TIM1 update interrupt.
-  * @param  None
-  * @retval None
+   ******************************************************************************
+   * @brief    Resume Tick increment.
+   * @note     Enable the tick increment by Enabling TIM1 update interrupt.
+   ******************************************************************************
   */
+
 void HAL_ResumeTick (void)
 {
     /* Enable TIM1 Update interrupt */
     __HAL_TIM_ENABLE_IT (&systemTimer, TIM_IT_UPDATE);
 }
 
-TIM_HandleTypeDef getSystemTimer ()
+
+/**
+   ******************************************************************************
+   * @brief      Getting a handler to system timer
+   * @return     Handler to system timer
+   ******************************************************************************
+  */
+
+TIM_HandleTypeDef getSystemTimer (void)
 {
     return systemTimer;
 }

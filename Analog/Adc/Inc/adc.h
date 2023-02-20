@@ -1,10 +1,10 @@
 /**
-  ******************************************************************************
-  * @file    adc.h
-  * @brief   This file contains all the function prototypes for
-  *          the adc.c file
-  ******************************************************************************
-  */
+   ******************************************************************************
+   * @file     adc.h
+   * @brief    This file contains all the function prototypes for
+   *           the adc.c file
+   ******************************************************************************
+   */
 
 #ifndef __ADC_H__
 #define __ADC_H__
@@ -13,23 +13,21 @@
 extern "C" {
 #endif
 
-#include "main.h"
+
+#include <freertos.h>
+#include <main.h>
 
 
 /**
    ******************************************************************************
-   * @defgroup  adc ADC
-   * @brief     This module is designed to initialize the ADC peripheral
+   * @defgroup     adc ADC
+   * @brief        This module is designed to initialize the ADC peripheral
    ******************************************************************************
    * @{
    */
 
-#define STACK_SIZE      4096
-#define STRING_SIZE     128
-#define FLASHING_PERIOD 250U
-#define MINIMUM_DELAY   1U
 
-void initializeADC (void);
+HAL_StatusTypeDef initializeADC (void);
 
 HAL_StatusTypeDef startADC (void);
 

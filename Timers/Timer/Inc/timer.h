@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    timer.h
-  * @brief   This file contains all the function prototypes for
-  *          the timer.c file
+  * @file     timer.h
+  * @brief    This file contains all the function prototypes for
+  *           the timer.c file
   ******************************************************************************
   */
 
@@ -17,19 +17,20 @@ extern "C" {
 
 /**
    ******************************************************************************
-   * @defgroup  timer Timer
-   * @brief     This module is designed to initialize the Timer
+   * @defgroup    timer Timer
+   * @brief       This module is designed to initialize the Timer
    ******************************************************************************
    * @{
    */
 
-void initializeTimer6 (void);
+HAL_StatusTypeDef initializeTimer6 (void);
 
 void setTimerConfig (uint16_t adcValue);
 
-void startTimerBase (void);
+HAL_StatusTypeDef startTimerBase (void);
 
 TIM_HandleTypeDef getTimer (void);
+
 
 /**
   * @}

@@ -1,32 +1,31 @@
 /**
-  ******************************************************************************
-  * @file    adc.c
-  * @brief   This file provides code for the configuration
-  *          of the ADC instances.
-  ******************************************************************************
-  */
+   ******************************************************************************
+   * @file     adc.c
+   * @brief    This file provides code for the configuration
+   *           of the ADC instances.
+   ******************************************************************************
+   */
 
 #include "adc.h"
 
-#include "freertos.h"
+#define NUMBERS_IN_FILTER           8      ///< The size of the temporary array for filtering
+#define POLL_FOR_CONVERSION_TIMEOUT 100    ///< Poll for conversion timeout
 
-#define NUMBERS_IN_FILTER 8   ///< The size of the temporary array for filtering
-
-static ADC_HandleTypeDef adc; ///< Pointer ADC Handler
+static ADC_HandleTypeDef adc;              ///< Pointer ADC Handler
 
 static uint16_t filter (uint16_t newValue);
 
 
 /**
    ******************************************************************************
-   * @brief    ADC initialization function
-   * @ingroup  adc
+   * @brief      ADC initialization function
+   * @ingroup    adc
+   * @return     Status of the initialization
    ******************************************************************************
    */
 
-void initializeADC (void)
+HAL_StatusTypeDef initializeADC (void)
 {
-
     ADC_ChannelConfTypeDef sConfig = {0};
 
     /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
@@ -44,7 +43,10 @@ void initializeADC (void)
     adc.Init.DMAContinuousRequests = DISABLE;
     adc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
 
-    ASSERT (HAL_ADC_Init (&adc) != HAL_OK);
+    if (HAL_ADC_Init (&adc) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
 
     /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
     */
@@ -52,26 +54,30 @@ void initializeADC (void)
     sConfig.Rank         = ADC_REGULAR_RANK_1;
     sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
 
-    ASSERT (HAL_ADC_ConfigChannel (&adc, &sConfig) != HAL_OK);
+    if (HAL_ADC_ConfigChannel (&adc, &sConfig) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+
+    return HAL_OK;
 }
 
 
 /**
    ******************************************************************************
-   * @brief      This function configures the hardware resources used in this
-   *             example
-   * @ingroup    adc
-   * @param[in]  adcHandle - ADC handle pointer
+   * @brief        This function configures the hardware resources used in this
+   *               example
+   * @ingroup      adc
+   * @param[in]    adcHandle - ADC handle pointer
    ******************************************************************************
    */
 
 void HAL_ADC_MspInit (ADC_HandleTypeDef *adcHandle)
 {
-
     GPIO_InitTypeDef GPIO_InitStruct = {0};
+
     if (adcHandle->Instance == ADC1)
     {
-
         /* ADC1 clock enable */
         __HAL_RCC_ADC1_CLK_ENABLE ();
 
@@ -89,15 +95,15 @@ void HAL_ADC_MspInit (ADC_HandleTypeDef *adcHandle)
 
 /**
    ******************************************************************************
-   * @brief      This function freeze the hardware resources used in this example
-   * @ingroup    adc
-   * @param[in]  adcHandle - ADC handle pointer
+   * @brief        This function freeze the hardware resources used in this
+   *               example
+   * @ingroup      adc
+   * @param[in]    adcHandle - ADC handle pointer
    ******************************************************************************
    */
 
 void HAL_ADC_MspDeInit (ADC_HandleTypeDef *adcHandle)
 {
-
     if (adcHandle->Instance == ADC1)
     {
         /* Peripheral clock disable */
@@ -127,18 +133,18 @@ HAL_StatusTypeDef startADC (void)
 
 /**
    ******************************************************************************
-   * @brief      Input values filtering function
-   * @ingroup    adc
-   * @param[in]  newValue - New value for filtering from ADC
-   * @return     Average value
+   * @brief        Input values filtering function
+   * @ingroup      adc
+   * @param[in]    newValue - New value for filtering from ADC
+   * @return       Average value
    ******************************************************************************
    */
 
 static uint16_t filter (uint16_t newValue)
 {
-    static uint8_t  index   = 0;                   ///< Contains the position in the array of the last value added
-    static uint16_t values[NUMBERS_IN_FILTER];     ///< Array for averaging
-    static uint16_t average = 0;                   ///< Stores the sum of values for averaging
+    static uint8_t  index   = 0;                  ///< Contains the position in the array of the last value added
+    static uint16_t average = 0;                  ///< Stores the sum of values for averaging
+    static uint16_t values[NUMBERS_IN_FILTER];    ///< Array for averaging
 
     if (++index >= NUMBERS_IN_FILTER)
         index = 0;
@@ -161,11 +167,30 @@ static uint16_t filter (uint16_t newValue)
 
 uint16_t getAdcValue (void)
 {
-    uint16_t currentValue = HAL_ADC_GetValue (&adc);
+    HAL_StatusTypeDef halStatus;
+    uint16_t          currentValue = HAL_ADC_GetValue (&adc);
     currentValue = filter (currentValue);
-    HAL_ADC_Stop (&adc);
-    HAL_ADC_Start (&adc);
-    HAL_ADC_PollForConversion (&adc, 100);
+
+    halStatus = HAL_ADC_Stop (&adc);
+
+    if (halStatus != HAL_OK)
+    {
+        errorHandler ();
+    }
+
+    halStatus = HAL_ADC_Start (&adc);
+
+    if (halStatus != HAL_OK)
+    {
+        errorHandler ();
+    }
+
+    halStatus = HAL_ADC_PollForConversion (&adc, POLL_FOR_CONVERSION_TIMEOUT);
+
+    if (halStatus != HAL_OK)
+    {
+        errorHandler ();
+    }
 
     return currentValue;
 }
@@ -187,32 +212,48 @@ ADC_HandleTypeDef getADC (void)
 
 /**
    ******************************************************************************
-   * @brief     Function implementing the taskADC thread.
-   * @param[in] argument - Not used
-   * @retval    None
+   * @brief        Function implementing the taskADC thread.
+   * @param[in]    argument - Not used
+   * @return       None
    ******************************************************************************
    */
 
 void startTaskADC (void *argument)
 {
-    osMutexId_t mutexErrorHandle = getMutexErrorHandle();
+    osStatus_t  osStatus;
+    osMutexId_t mutexErrorHandle = getMutexErrorHandle ();
 
     if (startADC () != HAL_OK)
     {
-        osMutexAcquire (mutexErrorHandle, osWaitForever);
+        osStatus = osMutexAcquire (mutexErrorHandle, osWaitForever);
+
+        if ((osStatus == osErrorParameter) || (osStatus == osErrorISR))
+        {
+            errorHandler ();
+        }
     }
 
-    queueADC_t messageADC;
-    osMessageQueueId_t queueADCHandle = getQueueAdcHandle();
+    messageADC_t       messageADC;
+    osMessageQueueId_t queueAdcHandle = getQueueAdcHandle ();
 
     for (;;)
     {
         if (osMutexGetOwner (mutexErrorHandle) == NULL)
         {
             messageADC.Buf = getAdcValue ();
-            osMessageQueuePut (queueADCHandle, &messageADC, 0, osWaitForever);
+            osStatus = osMessageQueuePut (queueAdcHandle, &messageADC, 0, osWaitForever);
+
+            if (osStatus == osErrorParameter)
+            {
+                errorHandler ();
+            }
         }
 
-        osDelay (MINIMUM_DELAY);
+        osStatus = osDelay (MINIMUM_DELAY);
+
+        if (osStatus != osOK)
+        {
+            errorHandler ();
+        }
     }
 }

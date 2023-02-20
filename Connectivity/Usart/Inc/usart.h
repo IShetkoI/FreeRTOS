@@ -1,9 +1,8 @@
 /**
    ******************************************************************************
-   * @file    usart.h
-   * @author  Ivan Shetska
-   * @brief   This file contains prototype functions to initialize the USART
-   *          interface
+   * @file     usart.h
+   * @brief    This file contains prototype functions to initialize the USART
+   *           interface
    ******************************************************************************
    */
 
@@ -14,37 +13,24 @@
 extern "C" {
 #endif
 
-#include "main.h"
 
+#include "main.h"
+#include "freertos.h"
+#include <stdio.h>
+#include <string.h>
 
 /**
    ******************************************************************************
-   * @defgroup  usart USART
-   * @brief     This module is designed to initialize the USART interface
+   * @defgroup    usart USART
+   * @brief       This module is designed to initialize the USART interface
    ******************************************************************************
    * @{
    */
 
-
-/**
-   ******************************************************************************
-   * @brief    USART initialization function
-   * @returns  Status of the initialization
-   ******************************************************************************
-  */
-
 HAL_StatusTypeDef initializeUsart (void);
 
-
-/**
-   ******************************************************************************
-   * @brief     Function implementing the taskUSART thread.
-   * @param[in] argument - Not used
-   * @retval    None
-   ******************************************************************************
-   */
-
 void startTaskUSART (void *argument);
+
 
 /**
   * @}

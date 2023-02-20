@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    timer.c
-  * @brief   This file provides code for the configuration
-  *          of the TIM instances.
+  * @file     timer.c
+  * @brief    This file provides code for the configuration
+  *           of the TIM instances.
   ******************************************************************************
   */
 
@@ -18,12 +18,13 @@ static uint16_t interpolation (uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y
 
 /**
    ******************************************************************************
-   * @brief    Timer initialization function
-   * @ingroup  timer
+   * @brief      Timer initialization function
+   * @ingroup    timer
+   * @return     Status of initialization
    ******************************************************************************
    */
 
-void initializeTimer6 (void)
+HAL_StatusTypeDef initializeTimer6 (void)
 {
     TIM_MasterConfigTypeDef sMasterConfig = {0};
 
@@ -32,20 +33,30 @@ void initializeTimer6 (void)
     timer.Init.CounterMode       = TIM_COUNTERMODE_UP;
     timer.Init.Period            = INITIAL_PERIOD_VALUE;
     timer.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    ASSERT (HAL_TIM_Base_Init (&timer) != HAL_OK);
+
+    if (HAL_TIM_Base_Init (&timer) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
 
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
     sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
-    ASSERT (HAL_TIMEx_MasterConfigSynchronization (&timer, &sMasterConfig) != HAL_OK);
+
+    if (HAL_TIMEx_MasterConfigSynchronization (&timer, &sMasterConfig) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+
+    return HAL_OK;
 }
 
 
 /**
    ******************************************************************************
-   * @brief      This function configures the hardware resources used in this
-   *             example
-   * @ingroup    timer
-   * @param[in]  tim_baseHandle - Timer handle pointer
+   * @brief        This function configures the hardware resources used in this
+   *               example
+   * @ingroup      timer
+   * @param[in]    tim_baseHandle - Timer handle pointer
    ******************************************************************************
    */
 
@@ -65,9 +76,9 @@ void HAL_TIM_Base_MspInit (TIM_HandleTypeDef *tim_baseHandle)
 
 /**
    ******************************************************************************
-   * @brief      This function freeze the hardware resources used in this example
-   * @ingroup    timer
-   * @param[in]  tim_baseHandle - Timer handle pointer
+   * @brief        This function freeze the hardware resources used in this example
+   * @ingroup      timer
+   * @param[in]    tim_baseHandle - Timer handle pointer
    ******************************************************************************
    */
 
@@ -82,14 +93,14 @@ void HAL_TIM_Base_MspDeInit (TIM_HandleTypeDef *tim_baseHandle)
 
 /**
    ******************************************************************************
-   * @brief      Interpolation calculation function
-   * @ingroup    adc
-   * @param[in]  x1 - Contiguous value for y1
-   * @param[in]  x2 - Contiguous value for y2
-   * @param[in]  x3 - Contiguous value for y3
-   * @param[in]  y1 - First value of the range
-   * @param[in]  y3 - Second value of the range
-   * @return     Intermediate value between y1 and y2
+   * @brief        Interpolation calculation function
+   * @ingroup      adc
+   * @param[in]    x1 - Contiguous value for y1
+   * @param[in]    x2 - Contiguous value for y2
+   * @param[in]    x3 - Contiguous value for y3
+   * @param[in]    y1 - First value of the range
+   * @param[in]    y3 - Second value of the range
+   * @return       Intermediate value between y1 and y2
    *
    *  \f[
    *  y_2 = y_1 + (x_2 - x_1) * (y_3 - y_1) / (x_3 - x_1);
@@ -155,12 +166,13 @@ void setTimerConfig (uint16_t adcValue)
    ******************************************************************************
    * @brief      Timer start function
    * @ingroup    timer
+   * @return     Status of start function
    ******************************************************************************
    */
 
-void startTimerBase (void)
+HAL_StatusTypeDef startTimerBase (void)
 {
-    HAL_TIM_Base_Start (&timer);
+    return HAL_TIM_Base_Start (&timer);
 }
 
 
@@ -177,14 +189,15 @@ TIM_HandleTypeDef getTimer (void)
     return timer;
 }
 
+
 /**
    ******************************************************************************
-   * @brief      Period elapsed callback in non blocking mode
-   * @note       This function is called  when TIM1 interrupt took place, inside
-   *             HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-   *             a global variable "uwTick" used as application time base.
-   * @param[in]  htim - TIM handle
-   * @retval     None
+   * @brief        Period elapsed callback in non blocking mode
+   * @note         This function is called  when TIM1 interrupt took place,
+   *               inside HAL_TIM_IRQHandler(). It makes a direct call to
+   *               HAL_IncTick() to increment a global variable "uwTick" used as
+   *               application time base.
+   * @param[in]    htim - TIM handle
    ******************************************************************************
    */
 
