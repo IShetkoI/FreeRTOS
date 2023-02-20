@@ -1,27 +1,25 @@
 /**
    ******************************************************************************
-   * @file    gpio.c
-   * @brief   This is the common part of the GPIO initialization
+   * @file     gpio.c
+   * @brief    This is the common part of the GPIO initialization
    ******************************************************************************
    */
 
 #include "gpio.h"
-#include "FreeRTOS.h"
+#include "freertos.h"
 #include "main.h"
 #include "stdbool.h"
-#include "cmsis_os.h"
 
 
 /**
    ******************************************************************************
-   * @brief    GPIO initialization function
-   * @ingroup  gpio
+   * @brief      GPIO initialization function
+   * @ingroup    gpio
    ******************************************************************************
    */
 
 void initializeGPIO (void)
 {
-
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     /* GPIO Ports Clock Enable */
@@ -66,9 +64,9 @@ void initializeGPIO (void)
 
 /**
    ******************************************************************************
-   * @brief      GPIO interrupt handler
-   * @ingroup    gpio
-   * @param[in]  GPIO_Pin - pin number to be processed
+   * @brief        GPIO interrupt handler
+   * @ingroup      gpio
+   * @param[in]    GPIO_Pin - pin number to be processed
    ******************************************************************************
    */
 
@@ -76,17 +74,30 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 {
     if (GPIO_Pin == BUTTON_Pin)
     {
+        osStatus_t osStatus;
         static bool     isActive              = true;                   ///< Whether to enable measurement from the BMP280 sensor
         osSemaphoreId_t semaphoreButtonHandle = getSemaphoreButtonHandle();
 
         if (isActive == true)
         {
-            osSemaphoreAcquire (semaphoreButtonHandle, 0);
+            osStatus = osSemaphoreAcquire (semaphoreButtonHandle, 0);
+
+            if (osStatus == osErrorParameter)
+            {
+                errorHandler();
+            }
+
             isActive = false;
         }
         else
         {
-            osSemaphoreRelease (semaphoreButtonHandle);
+            osStatus = osSemaphoreRelease (semaphoreButtonHandle);
+
+            if (osStatus == osErrorParameter)
+            {
+                errorHandler();
+            }
+
             isActive = true;
         }
 

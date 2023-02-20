@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    dma.h
-  * @brief   This file contains all the function prototypes for
-  *          the dma.c file
+  * @file     dma.h
+  * @brief    This file contains all the function prototypes for
+  *           the dma.c file
   ******************************************************************************
   */
 
@@ -18,13 +18,14 @@ extern "C" {
 
 /**
    ******************************************************************************
-   * @defgroup  dma DMA
-   * @brief     This module is designed to initialize the DMA
+   * @defgroup    dma DMA
+   * @brief       This module is designed to initialize the DMA
    ******************************************************************************
    * @{
    */
 
 void initializeDMA (void);
+
 
 /**
   * @}

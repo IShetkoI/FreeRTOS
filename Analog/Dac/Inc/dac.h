@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    dac.h
-  * @brief   This file contains all the function prototypes for
-  *          the dac.c file
+  * @file     dac.h
+  * @brief    This file contains all the function prototypes for
+  *           the dac.c file
   ******************************************************************************
   */
 
@@ -14,15 +14,23 @@ extern "C" {
 #endif
 
 #include "main.h"
+#include "freertos.h"
+#include "timer.h"
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
 
 /**
-  ******************************************************************************
-  * @defgroup  dac DAC
-  * @brief     This module is designed to initialize the DAC peripheral
-  ******************************************************************************
-  * @{
-  */
-void initializeDAC (void);
+   ******************************************************************************
+   * @defgroup    dac DAC
+   * @brief       This module is designed to initialize the DAC peripheral
+   ******************************************************************************
+   * @{
+   */
+
+
+HAL_StatusTypeDef initializeDAC (void);
 
 HAL_StatusTypeDef startDAC (void);
 

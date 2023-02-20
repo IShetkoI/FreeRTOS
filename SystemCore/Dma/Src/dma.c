@@ -1,23 +1,23 @@
 /**
   ******************************************************************************
-  * @file    dma.c
-  * @brief   This file provides code for the configuration
-  *          of all the requested memory to memory DMA transfers.
+  * @file     dma.c
+  * @brief    This file provides code for the configuration
+  *           of all the requested memory to memory DMA transfers.
   ******************************************************************************
   */
 
 #include "dma.h"
 
+
 /**
    ******************************************************************************
-   * @brief    DMA initialization function
-   * @ingroup  dma
+   * @brief      DMA initialization function
+   * @ingroup    dma
    ******************************************************************************
    */
 
 void initializeDMA (void)
 {
-
     /* DMA controller clock enable */
     __HAL_RCC_DMA1_CLK_ENABLE ();
 

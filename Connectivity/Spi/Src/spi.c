@@ -1,7 +1,7 @@
 /**
    ******************************************************************************
-   * @file    spi.c
-   * @brief   This is the common part of the Spi initialization
+   * @file     spi.c
+   * @brief    This is the common part of the Spi initialization
    ******************************************************************************
    */
 
@@ -30,7 +30,12 @@ HAL_StatusTypeDef initializeSpi (void)
     hspi1.Init.CRCLength         = SPI_CRC_LENGTH_DATASIZE;
     hspi1.Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
 
-    ASSERT (HAL_SPI_Init (&hspi1) != HAL_OK);
+    if (HAL_SPI_Init (&hspi1) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+
+    return HAL_OK;
 }
 
 
@@ -42,11 +47,11 @@ SPI_HandleTypeDef getPointerSpi (void)
 
 /**
    ******************************************************************************
-   * @brief      SPI MSP Initialization
-   *             This function configures the hardware resources used in this
-   *             example
-   * @ingroup    spi
-   * @param[in]  hspi - SPI handle pointer
+   * @brief        SPI MSP Initialization
+   *               This function configures the hardware resources used in this
+   *               example
+   * @ingroup      spi
+   * @param[in]    hspi - SPI handle pointer
    ******************************************************************************
    */
 
@@ -78,10 +83,11 @@ void HAL_SPI_MspInit (SPI_HandleTypeDef *hspi)
 
 /**
    ******************************************************************************
-   * @brief      SPI MSP De-Initialization
-   *             This function freeze the hardware resources used in this example
-   * @ingroup    spi
-   * @param[in]  hspi - SPI handle pointer
+   * @brief        SPI MSP De-Initialization
+   *               This function freeze the hardware resources used in this
+   *               example
+   * @ingroup      spi
+   * @param[in]    hspi - SPI handle pointer
    ******************************************************************************
    */
 

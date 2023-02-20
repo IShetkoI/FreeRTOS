@@ -1,8 +1,7 @@
 /**
    ******************************************************************************
-   * @file    clock.c
-   * @author  Ivan Shetska
-   * @brief   This is the common part of the Clock initialization
+   * @file     clock.c
+   * @brief    This is the common part of the Clock initialization
    ******************************************************************************
    */
 
@@ -10,7 +9,7 @@
 #include "clock.h"
 
 
-void initializeClock (void)
+HAL_StatusTypeDef initializeClock (void)
 {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -33,11 +32,18 @@ void initializeClock (void)
     RCC_OscInitStruct.PLL.PLLP            = RCC_PLLP_DIV2;
     RCC_OscInitStruct.PLL.PLLQ            = 2;
     RCC_OscInitStruct.PLL.PLLR            = 2;
-    ASSERT (HAL_RCC_OscConfig (&RCC_OscInitStruct) != HAL_OK);
+
+    if (HAL_RCC_OscConfig (&RCC_OscInitStruct) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
 
     /** Activate the Over-Drive mode
     */
-    ASSERT (HAL_PWREx_EnableOverDrive () != HAL_OK);
+    if (HAL_PWREx_EnableOverDrive () != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
 
     /** Initializes the CPU, AHB and APB buses clocks
     */
@@ -47,5 +53,10 @@ void initializeClock (void)
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-    ASSERT (HAL_RCC_ClockConfig (&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK);
+    if (HAL_RCC_ClockConfig (&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+
+    return HAL_OK;
 }

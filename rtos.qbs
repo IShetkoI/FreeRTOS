@@ -4,9 +4,6 @@ import qbs.ModUtils
 
 CppApplication
 {
-    files: [
-        "Core/Inc/freertos.h",
-    ]
     name: "RTOS"
     type: [
         "application",
@@ -50,28 +47,12 @@ CppApplication
 
     Group
     {
-        name: "Inc"
+        name: "Core"
         files:
         [
             Inc + "/*.h",
-        ]
-    }
-
-    Group
-    {
-        name: "Src"
-        files:
-        [
             Src + "/*.c",
             Src + "/*.cpp",
-        ]
-    }
-
-    Group
-    {
-        name: "Startup"
-        files:
-        [
             Startup + "/*.s",
         ]
     }
@@ -204,7 +185,7 @@ CppApplication
 
     Group
     {
-        name: "LD"
+        name: "Ld"
         files:
         [
             Home + "/*.ld",

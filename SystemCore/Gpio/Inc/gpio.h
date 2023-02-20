@@ -1,8 +1,8 @@
 /**
    ******************************************************************************
-   * @file    gpio.h
-   * @brief   This file contains prototype functions to initialize the GPIO
-   *          peripheral
+   * @file     gpio.h
+   * @brief    This file contains prototype functions to initialize the GPIO
+   *           peripheral
    ******************************************************************************
    */
 
@@ -18,13 +18,14 @@ extern "C" {
 
 /**
    ******************************************************************************
-   * @defgroup  gpio GPIO
-   * @brief     This module is designed to initialize the GPIO peripheral
+   * @defgroup    gpio GPIO
+   * @brief       This module is designed to initialize the GPIO peripheral
    ******************************************************************************
    * @{
    */
 
 void initializeGPIO (void);
+
 
 /**
   * @}

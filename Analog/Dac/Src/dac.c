@@ -1,16 +1,12 @@
 /**
   ******************************************************************************
-  * @file    dac.c
-  * @brief   This file provides code for the configuration
-  *          of the DAC instances.
+  * @file     dac.c
+  * @brief    This file provides code for the configuration
+  *           of the DAC instances.
   ******************************************************************************
   */
 
 #include "dac.h"
-#include "freertos.h"
-#include "timer.h"
-#include <math.h>
-#include <stdio.h>
 
 #define DOTS      255                    ///< Number of points to generate a sine wave
 #define QUARTERES 4                      ///< Number of quarters of a circle
@@ -24,44 +20,52 @@ static DMA_HandleTypeDef dmaDAC;         ///< Pointer DMA Handler
 
 /**
    ******************************************************************************
-   * @brief    DAC initialization function
-   * @ingroup  dac
+   * @brief      DAC initialization function
+   * @ingroup    dac
+   * @return     Status of the initialization
    ******************************************************************************
    */
 
-void initializeDAC (void)
+HAL_StatusTypeDef initializeDAC (void)
 {
-
     DAC_ChannelConfTypeDef sConfig = {0};
 
     /** DAC Initialization
     */
     dac.Instance = DAC;
 
-    ASSERT (HAL_DAC_Init (&dac) != HAL_OK);
+    if (HAL_DAC_Init (&dac) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
 
     /** DAC channel OUT1 config
     */
     sConfig.DAC_Trigger      = DAC_TRIGGER_T6_TRGO;
     sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
 
-    ASSERT (HAL_DAC_ConfigChannel (&dac, &sConfig, DAC_CHANNEL_1) != HAL_OK);
+    if (HAL_DAC_ConfigChannel (&dac, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+
+    return HAL_OK;
 }
 
 
 /**
    ******************************************************************************
-   * @brief      This function configures the hardware resources used in this
-   *             example
-   * @ingroup    dac
-   * @param[in]  dacHandle - DAC handle pointer
+   * @brief        This function configures the hardware resources used in this
+   *               example
+   * @ingroup      dac
+   * @param[in]    dacHandle - DAC handle pointer
    ******************************************************************************
    */
 
 void HAL_DAC_MspInit (DAC_HandleTypeDef *dacHandle)
 {
-
     GPIO_InitTypeDef GPIO_InitStruct = {0};
+
     if (dacHandle->Instance == DAC)
     {
         /* DAC clock enable */
@@ -88,8 +92,8 @@ void HAL_DAC_MspInit (DAC_HandleTypeDef *dacHandle)
         dmaDAC.Init.Mode                = DMA_CIRCULAR;
         dmaDAC.Init.Priority            = DMA_PRIORITY_LOW;
         dmaDAC.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+        HAL_DMA_Init (&dmaDAC);
 
-        ASSERT (HAL_DMA_Init (&dmaDAC) != HAL_OK);
 
         __HAL_LINKDMA (dacHandle, DMA_Handle1, dmaDAC);
 
@@ -102,9 +106,10 @@ void HAL_DAC_MspInit (DAC_HandleTypeDef *dacHandle)
 
 /**
    ******************************************************************************
-   * @brief      This function freeze the hardware resources used in this example
-   * @ingroup    dac
-   * @param[in]  dacHandle - DAC handle pointer
+   * @brief        This function freeze the hardware resources used in this
+   *               example
+   * @ingroup      dac
+   * @param[in]    dacHandle - DAC handle pointer
    ******************************************************************************
    */
 
@@ -153,7 +158,9 @@ static void calculationSine (void)
 HAL_StatusTypeDef startDAC (void)
 {
     if (HAL_DAC_Start (&dac, DAC_CHANNEL_1) != HAL_OK)
+    {
         return HAL_ERROR;
+    }
 
     calculationSine ();
 
@@ -169,7 +176,7 @@ HAL_StatusTypeDef startDAC (void)
    ******************************************************************************
    */
 
-DAC_HandleTypeDef getDAC ()
+DAC_HandleTypeDef getDAC (void)
 {
     return dac;
 }
@@ -183,7 +190,7 @@ DAC_HandleTypeDef getDAC ()
    ******************************************************************************
    */
 
-DMA_HandleTypeDef getDmaDAC ()
+DMA_HandleTypeDef getDmaDAC (void)
 {
     return dmaDAC;
 }
@@ -191,26 +198,30 @@ DMA_HandleTypeDef getDmaDAC ()
 
 /**
    ******************************************************************************
-   * @brief      Function implementing the taskDAC thread.
-   * @param[in]  argument - Not used
-   * @retval     None
+   * @brief        Function implementing the taskDAC thread.
+   * @param[in]    argument - Not used
    ******************************************************************************
    */
 
 void startTaskDAC (void *argument)
 {
-    osMutexId_t mutexErrorHandle = getMutexErrorHandle();
+    osStatus_t  osStatus;
+    osMutexId_t mutexErrorHandle = getMutexErrorHandle ();
 
     if (startDAC () != HAL_OK)
     {
-        osMutexAcquire (mutexErrorHandle, osWaitForever);
+        osStatus = osMutexAcquire (mutexErrorHandle, osWaitForever);
+
+        if ((osStatus == osErrorParameter) || (osStatus == osErrorISR))
+        {
+            errorHandler ();
+        }
     }
 
-    queueADC_t   messageADC;
-    queueUSART_t messageUSART;
-    osMessageQueueId_t queueADCHandle = getQueueAdcHandle();
-    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle();
-
+    messageADC_t       messageADC;
+    messageUSART_t     messageUSART;
+    osMessageQueueId_t queueADCHandle   = getQueueAdcHandle ();
+    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle ();
 
     for (;;)
     {
@@ -229,11 +240,21 @@ void startTaskDAC (void *argument)
                     strcpy (messageUSART.Buf, "ADC value - ");
                     strcat (messageUSART.Buf, temp);
 
-                    osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
+                    osStatus = osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
+
+                    if (osStatus == osErrorParameter)
+                    {
+                        errorHandler ();
+                    }
                 }
             }
         }
 
-        osDelay (MINIMUM_DELAY);
+        osStatus = osDelay (MINIMUM_DELAY);
+
+        if (osStatus != osOK)
+        {
+            errorHandler ();
+        }
     }
 }
