@@ -77,7 +77,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
     if (GPIO_Pin == BUTTON_Pin)
     {
         static bool     isActive              = true;                   ///< Whether to enable measurement from the BMP280 sensor
-        osSemaphoreId_t semaphoreButtonHandle = getButtonSemaphore ();
+        osSemaphoreId_t semaphoreButtonHandle = getSemaphoreButtonHandle();
 
         if (isActive == true)
         {

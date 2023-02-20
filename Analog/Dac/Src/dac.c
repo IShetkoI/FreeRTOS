@@ -7,7 +7,10 @@
   */
 
 #include "dac.h"
+#include "freertos.h"
+#include "timer.h"
 #include <math.h>
+#include <stdio.h>
 
 #define DOTS      255                    ///< Number of points to generate a sine wave
 #define QUARTERES 4                      ///< Number of quarters of a circle
@@ -183,4 +186,54 @@ DAC_HandleTypeDef getDAC ()
 DMA_HandleTypeDef getDmaDAC ()
 {
     return dmaDAC;
+}
+
+
+/**
+   ******************************************************************************
+   * @brief      Function implementing the taskDAC thread.
+   * @param[in]  argument - Not used
+   * @retval     None
+   ******************************************************************************
+   */
+
+void startTaskDAC (void *argument)
+{
+    osMutexId_t mutexErrorHandle = getMutexErrorHandle();
+
+    if (startDAC () != HAL_OK)
+    {
+        osMutexAcquire (mutexErrorHandle, osWaitForever);
+    }
+
+    queueADC_t   messageADC;
+    queueUSART_t messageUSART;
+    osMessageQueueId_t queueADCHandle = getQueueAdcHandle();
+    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle();
+
+
+    for (;;)
+    {
+        if (osMutexGetOwner (mutexErrorHandle) == NULL)
+        {
+            if (osMessageQueueGetCount (queueADCHandle) != 0)
+            {
+                if (osMessageQueueGet (queueADCHandle, &messageADC, 0, osWaitForever) == osOK)
+                {
+                    setTimerConfig (messageADC.Buf);
+
+                    char temp[STRING_SIZE] = "";
+
+                    sprintf (temp, "%d", messageADC.Buf);
+
+                    strcpy (messageUSART.Buf, "ADC value - ");
+                    strcat (messageUSART.Buf, temp);
+
+                    osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
+                }
+            }
+        }
+
+        osDelay (MINIMUM_DELAY);
+    }
 }

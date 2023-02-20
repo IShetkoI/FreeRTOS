@@ -7,6 +7,9 @@
    */
 
 #include "bmp280.h"
+#include "spi.h"
+#include "freertos.h"
+#include <string.h>
 
 
 StatusCodes initializeBmp280 (BMP280 *device,
@@ -214,4 +217,48 @@ StatusCodes measure (BMP280 *device)
         status = BMP280_MEASURE_IS_READY;
 
     return status;
+}
+
+
+void startTaskBMP280 (void *argument)
+{
+    queueUSART_t      messageUSART;
+    BMP280            bmp280;
+    char              temp[STRING_SIZE] = "";
+    SPI_HandleTypeDef hspi1             = getPointerSpi ();
+    osMutexId_t mutexErrorHandle = getMutexErrorHandle();
+    osSemaphoreId_t semaphoreButtonHandle = getSemaphoreButtonHandle();
+
+    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle();
+
+    if (initializeBmp280 (&bmp280, &hspi1, CRYSTAL_SELECT_Pin, oversampling_x16, oversampling_x2, mode_normal,
+                          filter_coeff_16, standby_time_500us) != BMP280_OK)
+    {
+        osMutexAcquire (mutexErrorHandle, osWaitForever);
+    }
+
+    for (;;)
+    {
+        if (osMutexGetOwner (mutexErrorHandle) == NULL)
+        {
+            if (osSemaphoreGetCount (semaphoreButtonHandle) == 0)
+            {
+                measure (&bmp280);
+                strcpy (messageUSART.Buf, "Temperature - ");
+                sprintf (temp, "%d", bmp280.measurement.temperature);
+                strcat (messageUSART.Buf, temp);
+
+                strcat (messageUSART.Buf, ";   Pressure - ");
+                sprintf (temp, "%d", bmp280.measurement.pressure);
+                strcat (messageUSART.Buf, temp);
+
+                osMessageQueuePut (queueUSARTHandle, &messageUSART, 0, osWaitForever);
+
+                HAL_GPIO_TogglePin (LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+                osDelay (FLASHING_PERIOD);
+            }
+        }
+
+        osDelay (MINIMUM_DELAY);
+    }
 }

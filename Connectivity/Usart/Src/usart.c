@@ -6,6 +6,8 @@
    */
 
 #include "usart.h"
+#include "freertos.h"
+#include <string.h>
 
 #define BAUD_RATE 115200         ///< Information transfer rate
 #define UART_SIZE 1              ///< Package size
@@ -67,8 +69,6 @@ void HAL_UART_MspInit (UART_HandleTypeDef *huart)
 
         HAL_GPIO_Init (GPIOD, &GPIO_InitStruct);
     }
-
-    return HAL_OK;
 }
 
 
@@ -115,3 +115,26 @@ int __io_putchar (int symbol)
     return symbol;
 }
 
+
+void startTaskUSART (void *argument)
+{
+    queueUSART_t messageUSART;
+    osMessageQueueId_t queueUSARTHandle = getQueueUsartHandle();
+    osMutexId_t mutexErrorHandle = getMutexErrorHandle ();
+
+    for (;;)
+    {
+        if (osMutexGetOwner (mutexErrorHandle) == NULL)
+        {
+            if (osMessageQueueGetCount (queueUSARTHandle) != 0)
+            {
+                if (osMessageQueueGet (queueUSARTHandle, &messageUSART, 0, osWaitForever) == osOK)
+                {
+                    strcat (messageUSART.Buf, "\r\n\0");
+                    printf ("%s", messageUSART.Buf);
+                }
+            }
+        }
+        osDelay (MINIMUM_DELAY);
+    }
+}

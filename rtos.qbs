@@ -4,6 +4,9 @@ import qbs.ModUtils
 
 CppApplication
 {
+    files: [
+        "Core/Inc/freertos.h",
+    ]
     name: "RTOS"
     type: [
         "application",
@@ -33,16 +36,16 @@ CppApplication
     property string CMSIS:       Home + "/Drivers/CMSIS"
     property string HAL:         Home + "/Drivers/STM32F7xx_HAL_Driver"
 
-    property string Adc:         Home + "/Middlewares/Adc"
-    property string Bmp280:      Home + "/Middlewares/Bmp280"
-    property string Clock:       Home + "/Middlewares/Clock"
-    property string Dac:         Home + "/Middlewares/Dac"
-    property string Dma:         Home + "/Middlewares/Dma"
-    property string Gpio:        Home + "/Middlewares/Gpio"
-    property string Spi:         Home + "/Middlewares/Spi"
-    property string Third_Party: Home + "/Middlewares/Third_Party/FreeRTOS/Src"
-    property string Timer:       Home + "/Middlewares/Timer"
-    property string Usart:       Home + "/Middlewares/Usart"
+    property string Adc:         Home + "/Analog/Adc"
+    property string Bmp280:      Home + "/Sensors/Bmp280"
+    property string Clock:       Home + "/SystemCore/Clock"
+    property string Dac:         Home + "/Analog/Dac"
+    property string Dma:         Home + "/SystemCore/Dma"
+    property string Gpio:        Home + "/SystemCore/Gpio"
+    property string Spi:         Home + "/Connectivity/Spi"
+    property string FreeRTOS:    Home + "/Middleware/FreeRTOS/Src"
+    property string Timer:       Home + "/Timers/Timer"
+    property string Usart:       Home + "/Connectivity/Usart"
 
 
     Group
@@ -166,16 +169,16 @@ CppApplication
 
     Group
     {
-        name: "Third_Party"
+        name: "FreeRTOS"
         files:
         [
-            Third_Party + "/Inc/*.h",
-            Third_Party + "/CMSIS_RTOS_V2/*.h",
-            Third_Party + "/CMSIS_RTOS_V2/*.c",
-            Third_Party + "/portable/GCC/ARM_CM7/r0p1/*.c",
-            Third_Party + "/portable/GCC/ARM_CM7/r0p1/*.h",
-            Third_Party + "/portable/MemMang/*.c",
-            Third_Party + "/*.c",
+            FreeRTOS + "/Inc/*.h",
+            FreeRTOS + "/CMSIS_RTOS_V2/*.h",
+            FreeRTOS + "/CMSIS_RTOS_V2/*.c",
+            FreeRTOS + "/portable/GCC/ARM_CM7/r0p1/*.c",
+            FreeRTOS + "/portable/GCC/ARM_CM7/r0p1/*.h",
+            FreeRTOS + "/portable/MemMang/*.c",
+            FreeRTOS + "/*.c",
         ]
     }
 
@@ -225,9 +228,9 @@ CppApplication
         Dma         + "/Inc",
         Gpio        + "/Inc",
         Spi         + "/Inc",
-        Third_Party + "/Inc",
-        Third_Party + "/CMSIS_RTOS_V2",
-        Third_Party + "/portable/GCC/ARM_CM7/r0p1/",
+        FreeRTOS + "/Inc",
+        FreeRTOS + "/CMSIS_RTOS_V2",
+        FreeRTOS + "/portable/GCC/ARM_CM7/r0p1/",
         Timer       + "/Inc",
         Usart       + "/Inc",
     ]

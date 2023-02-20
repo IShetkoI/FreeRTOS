@@ -24,6 +24,11 @@ extern "C" {
    * @{
    */
 
+#define STACK_SIZE      4096
+#define STRING_SIZE     128
+#define FLASHING_PERIOD 250U
+#define MINIMUM_DELAY   1U
+
 void initializeADC (void);
 
 HAL_StatusTypeDef startADC (void);
@@ -31,6 +36,8 @@ HAL_StatusTypeDef startADC (void);
 uint16_t getAdcValue (void);
 
 ADC_HandleTypeDef getADC (void);
+
+void startTaskADC (void *argument);
 
 /**
   * @}

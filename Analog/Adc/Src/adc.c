@@ -8,6 +8,8 @@
 
 #include "adc.h"
 
+#include "freertos.h"
+
 #define NUMBERS_IN_FILTER 8   ///< The size of the temporary array for filtering
 
 static ADC_HandleTypeDef adc; ///< Pointer ADC Handler
@@ -180,4 +182,37 @@ uint16_t getAdcValue (void)
 ADC_HandleTypeDef getADC (void)
 {
     return adc;
+}
+
+
+/**
+   ******************************************************************************
+   * @brief     Function implementing the taskADC thread.
+   * @param[in] argument - Not used
+   * @retval    None
+   ******************************************************************************
+   */
+
+void startTaskADC (void *argument)
+{
+    osMutexId_t mutexErrorHandle = getMutexErrorHandle();
+
+    if (startADC () != HAL_OK)
+    {
+        osMutexAcquire (mutexErrorHandle, osWaitForever);
+    }
+
+    queueADC_t messageADC;
+    osMessageQueueId_t queueADCHandle = getQueueAdcHandle();
+
+    for (;;)
+    {
+        if (osMutexGetOwner (mutexErrorHandle) == NULL)
+        {
+            messageADC.Buf = getAdcValue ();
+            osMessageQueuePut (queueADCHandle, &messageADC, 0, osWaitForever);
+        }
+
+        osDelay (MINIMUM_DELAY);
+    }
 }

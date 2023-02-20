@@ -304,6 +304,21 @@ void spiCsHigh (uint8_t crystalSelectPin);
 
 void spiCsLow (uint8_t crystalSelectPin);
 
+
+/**
+   ******************************************************************************
+   * @brief      Function implementing the taskBMP280 thread.
+   * @param[in]  argument - Not used
+   * @retval     None
+   ******************************************************************************
+*/
+
+void startTaskBMP280 (void *argument);
+
+/**
+  * @}
+  */
+
 #ifdef __cplusplus
 }
 #endif

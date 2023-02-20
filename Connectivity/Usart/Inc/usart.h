@@ -37,6 +37,16 @@ HAL_StatusTypeDef initializeUsart (void);
 
 
 /**
+   ******************************************************************************
+   * @brief     Function implementing the taskUSART thread.
+   * @param[in] argument - Not used
+   * @retval    None
+   ******************************************************************************
+   */
+
+void startTaskUSART (void *argument);
+
+/**
   * @}
   */
 

@@ -30,6 +30,8 @@ DAC_HandleTypeDef getDAC (void);
 
 DMA_HandleTypeDef getDmaDAC (void);
 
+void startTaskDAC (void *argument);
+
 /**
   * @}
   */
